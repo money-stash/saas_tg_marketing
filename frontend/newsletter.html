@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block styles %}
+<link rel="stylesheet" href="/static/newsletter.css">
+{% endblock %}
+
+{% block content %}
+<div class="newsletter-page">
+
+    <div class="newsletter-controls">
+        <input type="text" placeholder="Поиск по ID рассылки" class="search-newsletter-input">
+    </div>
+
+    <div class="newsletter-container">
+        <div class="newsletter-block">
+            <h3>ID: 001</h3>
+            <button class="download-log-button">Скачать лог</button>
+        </div>
+        <div class="newsletter-block">
+            <h3>ID: 002</h3>
+            <button class="download-log-button">Скачать лог</button>
+        </div>
+        <div class="newsletter-block">
+            <h3>ID: 003</h3>
+            <button class="download-log-button">Скачать лог</button>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

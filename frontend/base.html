@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Главная{% endblock %}</title>
+    {% block styles %}{% endblock %}
+</head>
+<body style="margin:0; font-family:Arial, sans-serif; background-color:#000; color:#00aaff;">
+
+    <header style="display:flex; align-items:center; justify-content:space-between; padding:10px 20px; background-color:#111; border-bottom:1px solid #00aaff;">
+        <div class="logo" onclick="window.location.href='/'" style="cursor:pointer;">
+            <img src="/static/logo.png" alt="Logo" style="height:40px;">
+        </div>
+        <nav style="display:flex; gap:15px;">
+            <a href="/" style="color:#00aaff; text-decoration:none; padding:8px 12px; border-radius:4px;">Главная</a>
+            <a href="/newsletter" style="color:#00aaff; text-decoration:none; padding:8px 12px; border-radius:4px;">Логи</a>
+            <a href="/workers" style="color:#00aaff; text-decoration:none; padding:8px 12px; border-radius:4px;">Воркеры</a>
+            <a href="/statistic" style="color:#00aaff; text-decoration:none; padding:8px 12px; border-radius:4px;">Статистика</a>
+            <a href="/sessions" style="color:#00aaff; text-decoration:none; padding:8px 12px; border-radius:4px;">Сессии</a>
+            <a href="/tokens" style="color:#00aaff; text-decoration:none; padding:8px 12px; border-radius:4px;">Токены</a>
+        </nav>
+    </header>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+</body>
+</html>

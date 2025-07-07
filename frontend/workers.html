@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block styles %}
+<link rel="stylesheet" href="/static/workers.css">
+{% endblock %}
+
+{% block content %}
+<div class="worker-search">
+    <input type="text" placeholder="Поиск воркера по имени" class="search-worker-input">
+</div>
+<div class="workers-container">
+    <div class="worker-block">
+        <h3>Воркер 1</h3>
+        <button class="block-button">Заблокировать</button>
+    </div>
+    <div class="worker-block">
+        <h3>Воркер 2</h3>
+        <button class="block-button">Заблокировать</button>
+    </div>
+    <div class="worker-block">
+        <h3>Воркер 3</h3>
+        <button class="block-button">Заблокировать</button>
+    </div>
+</div>
+{% endblock %}

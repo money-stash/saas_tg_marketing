@@ -1,0 +1,42 @@
+.workers-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+}
+
+.worker-block {
+    background-color: #111c;
+    border: 1px solid #00aaff;
+    padding: 15px;
+    border-radius: 8px;
+    color: #00aaff;
+}
+
+.block-button {
+    margin-top: 10px;
+    padding: 8px 12px;
+    background-color: #00aaff;
+    color: #000;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.block-button:hover {
+    background-color: #008ecc;
+}
+
+.search-worker-input {
+    flex: 1 1 300px;
+    padding: 8px 12px;
+    border: 1px solid #00aaff;
+    border-radius: 4px;
+    background-color: #111;
+    color: #00aaff;
+    font-size: 16px;
+}
+
+.search-worker-input::placeholder {
+    color: #00aaffaa;
+}

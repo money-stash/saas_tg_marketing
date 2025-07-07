@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block styles %}
+<link rel="stylesheet" href="/static/sessions.css">
+{% endblock %}
+
+{% block content %}
+<div class="sessions-page">
+
+    <div class="session-controls">
+        <input type="text" placeholder="Поиск сессии" class="search-session-input">
+        <div class="upload-session">
+            <input type="file" class="upload-session-input" accept=".session,.json,.txt">
+            <button class="upload-session-button">Загрузить сессию</button>
+        </div>
+    </div>
+
+    <div class="sessions-container">
+        <div class="session-block">
+            <h3>Сессия 1</h3>
+            <button class="delete-session-button">Удалить сессию</button>
+        </div>
+        <div class="session-block">
+            <h3>Сессия 2</h3>
+            <button class="delete-session-button">Удалить сессию</button>
+        </div>
+        <div class="session-block">
+            <h3>Сессия 3</h3>
+            <button class="delete-session-button">Удалить сессию</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
