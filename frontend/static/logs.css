@@ -1,21 +1,21 @@
 
 
 
-.newsletter-page {
+.logs-page {
     padding: 20px;
     display: flex;
     flex-direction: column;
     gap: 20px;
 }
 
-.newsletter-controls {
+.logs-controls {
     display: flex;
     flex-wrap: wrap;
     gap: 15px;
     align-items: center;
 }
 
-.search-newsletter-input {
+.search-logs-input {
     flex: 1 1 300px;
     padding: 8px 12px;
     border: 1px solid #00aaff;
@@ -25,22 +25,23 @@
     font-size: 16px;
 }
 
-.search-newsletter-input::placeholder {
+.search-logs-input::placeholder {
     color: #00aaffaa;
 }
 
-.newsletter-container {
+.logs-container {
     display: flex;
-    flex-direction: column;
+    flex-wrap: wrap;
     gap: 15px;
 }
 
-.newsletter-block {
+.logs-block {
     background-color: #111c;
     border: 1px solid #00aaff;
     padding: 15px;
     border-radius: 8px;
     color: #00aaff;
+    width: 200px;
 }
 
 .download-log-button {

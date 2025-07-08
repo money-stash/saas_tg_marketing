@@ -41,7 +41,7 @@
 
 .tokens-container {
     display: flex;
-    flex-direction: column;
+    flex-wrap: wrap;
     gap: 15px;
 }
 
@@ -51,6 +51,7 @@
     padding: 15px;
     border-radius: 8px;
     color: #00aaff;
+    width: 200px;
 }
 
 .delete-token-button {

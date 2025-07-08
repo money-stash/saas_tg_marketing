@@ -25,9 +25,9 @@ def open_sessions():
     return render_template("sessions.html")
 
 
-@app.route("/newsletter")
-def open_newsletter():
-    return render_template("newsletter.html")
+@app.route("/logs")
+def open_logs():
+    return render_template("logs.html")
 
 
 async def main():
