@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block styles %}
+<link rel="stylesheet" href="/static/statistic.css">
+{% endblock %}
+
+{% block content %}
+<div class="statistic-page">
+
+    <div class="statistic-controls">
+        <div class="toggle-buttons">
+            <button class="toggle-button active">Все</button>
+            <button class="toggle-button">Сессии</button>
+            <button class="toggle-button">Задачи</button>
+        </div>
+        <input type="text" placeholder="Поиск по ID" class="search-statistic-input">
+    </div>
+
+    <div class="statistic-container">
+        <div class="statistic-block">
+            <h3>ID: 001</h3>
+            <p class="statistic-date">Дата: 2025-07-08</p>
+            <p class="statistic-type">Тип: Рассылка</p>
+            <p class="statistic-target">Тип объекта: Сессия</p>
+            <button class="download-stat-button">Скачать статистику</button>
+        </div>
+        <div class="statistic-block">
+            <h3>ID: 002</h3>
+            <p class="statistic-date">Дата: 2025-07-08</p>
+            <p class="statistic-type">Тип: Парсинг</p>
+            <p class="statistic-target">Тип объекта: Задача</p>
+            <button class="download-stat-button">Скачать статистику</button>
+        </div>
+    </div>
+
+</div>
+<script>
+    const toggleButtons = document.querySelectorAll('.toggle-button');
+    const statBlocks = document.querySelectorAll('.statistic-block');
+
+    toggleButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            toggleButtons.forEach(b => b.classList.remove('active'));
+            button.classList.add('active');
+
+            const type = button.textContent.trim();
+            statBlocks.forEach(block => {
+                const label = block.querySelector('.statistic-target')?.textContent.trim();
+                if (type === 'Все' ||
+                    (type === 'Сессии' && label?.includes('Сессия')) ||
+                    (type === 'Задачи' && label?.includes('Задача'))) {
+                    block.style.display = '';
+                } else {
+                    block.style.display = 'none';
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

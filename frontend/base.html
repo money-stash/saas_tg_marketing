@@ -4,21 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Главная{% endblock %}</title>
+    <link rel="stylesheet" href="/static/style.css">
     {% block styles %}{% endblock %}
 </head>
-<body style="margin:0; font-family:Arial, sans-serif; background-color:#000; color:#00aaff;">
+<body class="main-body">
 
-    <header style="display:flex; align-items:center; justify-content:space-between; padding:10px 20px; background-color:#111; border-bottom:1px solid #00aaff;">
-        <div class="logo" onclick="window.location.href='/'" style="cursor:pointer;">
+    <header class="main-header">
+        <div class="logo" onclick="window.location.href='/'">
             <img src="/static/logo.png" alt="Logo" style="height:40px;">
         </div>
         <nav style="display:flex; gap:15px;">
-            <a href="/" style="color:#00aaff; text-decoration:none; padding:8px 12px; border-radius:4px;">Главная</a>
-            <a href="/logs" style="color:#00aaff; text-decoration:none; padding:8px 12px; border-radius:4px;">Логи</a>
-            <a href="/workers" style="color:#00aaff; text-decoration:none; padding:8px 12px; border-radius:4px;">Воркеры</a>
-            <a href="/statistic" style="color:#00aaff; text-decoration:none; padding:8px 12px; border-radius:4px;">Статистика</a>
-            <a href="/sessions" style="color:#00aaff; text-decoration:none; padding:8px 12px; border-radius:4px;">Сессии</a>
-            <a href="/tokens" style="color:#00aaff; text-decoration:none; padding:8px 12px; border-radius:4px;">Токены</a>
+            <a href="/" class="nav-link">Главная</a>
+            <a href="/logs" class="nav-link">Логи</a>
+            <a href="/workers" class="nav-link">Воркеры</a>
+            <a href="/statistic" class="nav-link">Статистика</a>
+            <a href="/sessions" class="nav-link">Сессии</a>
+            <a href="/tokens" class="nav-link">Токены</a>
         </nav>
     </header>
 

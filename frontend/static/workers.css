@@ -1,3 +1,8 @@
+body {
+    background-color: #202020;
+    color: #ffffff;
+}
+
 .workers-container {
     display: flex;
     flex-wrap: wrap;
@@ -5,12 +10,16 @@
     padding: 20px;
 }
 
+.search-worker-input::placeholder {
+    color: white;
+}
+
 .worker-block {
-    background-color: #111c;
-    border: 1px solid #00aaff;
+    background-color: #2a2a2a;
+    border: 1px solid white;
     padding: 15px;
     border-radius: 8px;
-    color: #00aaff;
+    color: #ffffff;
     width: 200px;
 }
 
@@ -25,19 +34,28 @@
 }
 
 .block-button:hover {
-    background-color: #008ecc;
+    background-color: white;
 }
 
 .search-worker-input {
-    flex: 1 1 300px;
-    padding: 8px 12px;
-    border: 1px solid #00aaff;
+    width: 100%;
+    padding: 10px 14px;
+    margin-top: 10px;
+    border: 1px solid white;
     border-radius: 4px;
-    background-color: #111;
-    color: #00aaff;
+    background-color: #282828;
+    color: white;
     font-size: 16px;
+    box-sizing: border-box;
 }
 
 .search-worker-input::placeholder {
     color: #00aaffaa;
+}
+
+.worker-date,
+.worker-type {
+    font-size: 14px;
+    margin-top: 5px;
+    color: #cccccc;
 }

@@ -3,14 +3,14 @@ body {
     color: #ffffff;
 }
 
-.logs-page {
+.statistic-page {
     padding: 20px;
     display: flex;
     flex-direction: column;
     gap: 20px;
 }
 
-.logs-controls {
+.statistic-controls {
     display: flex;
     flex-wrap: wrap;
     gap: 15px;
@@ -18,7 +18,33 @@ body {
     color: white;
 }
 
-.search-logs-input {
+.toggle-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.toggle-button {
+    padding: 8px 12px;
+    background-color: #2a2a2a;
+    color: white;
+    border: 1px solid white;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.toggle-button.active {
+    background-color: #00aaff;
+    color: black;
+    border-color: #00aaff;
+}
+
+.toggle-button:hover {
+    background-color: #008ecc;
+    border-color: #008ecc;
+    color: black;
+}
+
+.search-statistic-input {
     flex: 1 1 300px;
     padding: 8px 12px;
     border: 1px solid white;
@@ -28,17 +54,17 @@ body {
     font-size: 16px;
 }
 
-.search-logs-input::placeholder {
+.search-statistic-input::placeholder {
     color: white;
 }
 
-.logs-container {
+.statistic-container {
     display: flex;
     flex-wrap: wrap;
     gap: 15px;
 }
 
-.logs-block {
+.statistic-block {
     background-color: #2a2a2a;
     border: 1px solid white;
     padding: 15px;
@@ -47,15 +73,15 @@ body {
     width: 200px;
 }
 
-.log-status,
-.log-date,
-.log-type {
+.statistic-date,
+.statistic-target,
+.statistic-type {
     font-size: 14px;
     margin-top: 5px;
     color: #cccccc;
 }
 
-.download-log-button {
+.download-stat-button {
     margin-top: 10px;
     padding: 8px 12px;
     background-color: #00aaff;
@@ -65,6 +91,6 @@ body {
     cursor: pointer;
 }
 
-.download-log-button:hover {
+.download-stat-button:hover {
     background-color: #008ecc;
 }
