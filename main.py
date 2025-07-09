@@ -1,7 +1,9 @@
 import asyncio
-from database.db import db
 from flask import Flask
 from routes import register_blueprints
+
+from database.db import db
+
 
 app = Flask(__name__, template_folder="frontend", static_folder="frontend/static")
 register_blueprints(app)

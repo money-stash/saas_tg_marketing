@@ -9,3 +9,6 @@ class Worker(Base):
     username = Column(String)
     role = Column(String, default="worker")
     status = Column(Boolean, default=True)
+    key_id = Column(Integer, default=0)
+    user_id = Column(Integer)
+    date = Column(String)

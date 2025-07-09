@@ -8,28 +8,25 @@
 <div class="tokens-page">
     <div class="token-controls">
         <input type="text" placeholder="Поиск токена" class="search-token-input">
-        <div class="create-token">
-            <input type="text" placeholder="Имя токена" class="new-token-input">
-            <button class="create-token-button">Создать токен</button>
-        </div>
+        <form method="POST" action="/create-token" class="create-token">
+            <input type="text" name="token_key" placeholder="Имя токена" class="new-token-input" required>
+            <button type="submit" class="create-token-button">Создать токен</button>
+        </form>
     </div>
 
     <div class="tokens-container">
-        <div class="token-block">
-            <h3>Токен 1</h3>
-            <p class="token-date">Дата: 10-10-2025</p>
-            <button class="delete-token-button">Удалить токен</button>
-        </div>
-        <div class="token-block">
-            <h3>Токен 2</h3>
-            <p class="token-date">Дата: 10-10-2025</p>
-            <button class="delete-token-button">Удалить токен</button>
-        </div>
-        <div class="token-block">
-            <h3>Токен 3</h3>
-            <p class="token-date">Дата: 10-10-2025</p>
-            <button class="delete-token-button">Удалить токен</button>
-        </div>
+        {% for token in tokens %}
+        <form method="POST" action="/delete-token">
+            <div class="token-block">
+                <h3>{{ token.key }}</h3>
+                <p class="token-date">ID: {{ token.id }}</p>
+                <p class="token-date">NAME: {{ token.name }}</p>
+                <p class="token-date">User ID: {{ token.user_id }}</p>
+                <input type="hidden" name="token_id" value="{{ token.id }}">
+                <button type="submit" class="delete-token-button">Удалить токен</button>
+            </div>
+        </form>
+        {% endfor %}
     </div>
 </div>
 {% endblock %}

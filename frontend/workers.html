@@ -9,23 +9,13 @@
     <input type="text" placeholder="Поиск воркера по имени" class="search-worker-input">
 </div>
 <div class="workers-container">
+    {% for user in all_users %}
     <div class="worker-block">
-        <h3>Воркер 1</h3>
-        <p class="worker-type">Тип: Воркер</p>
-        <p class="worker-date">Дата: 10-10-2025</p>
+        <h3>{{ user.username }}</h3>
+        <p class="worker-type">Тип: {{ user.role }}</p>
+        <p class="worker-date">Дата: {{ user.date }}</p>
         <button class="block-button">Заблокировать</button>
     </div>
-    <div class="worker-block">
-        <h3>Воркер 2</h3>
-        <p class="worker-type">Тип: Админ</p>
-        <p class="worker-date">Дата: 10-10-2025</p>
-        <button class="block-button">Заблокировать</button>
-    </div>
-    <div class="worker-block">
-        <h3>Воркер 3</h3>
-        <p class="worker-type">Тип: Воркер</p>
-        <p class="worker-date">Дата: 10-10-2025</p>
-        <button class="block-button">Заблокировать</button>
-    </div>
+    {% endfor %}
 </div>
 {% endblock %}

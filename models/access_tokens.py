@@ -7,3 +7,5 @@ class AccessToken(Base):
 
     id = Column(Integer, primary_key=True)
     key = Column(String)
+    name = Column(String)
+    user_id = Column(Integer, default=0)
