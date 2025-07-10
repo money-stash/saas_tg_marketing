@@ -5,35 +5,44 @@
 {% endblock %}
 
 {% block content %}
+{% if request.args.get("success") %}
+  {% if request.args.get("success") == '1' %}
+    <div class="session-alert success-alert">Сессия успешно загружена</div>
+  {% elif request.args.get("success") == '0' %}
+    <div class="session-alert error-alert">Ошибка загрузки сессии</div>
+  {% endif %}
+  <script>
+    setTimeout(() => {
+      document.querySelector('.session-alert')?.remove();
+    }, 3000);
+  </script>
+{% endif %}
 <div class="sessions-page">
 
     <div class="session-controls">
         <input type="text" placeholder="Поиск сессии" class="search-session-input">
-        <div class="upload-session">
-            <input type="file" class="upload-session-input" accept=".session,.json,.txt">
-            <button class="upload-session-button">Загрузить сессию</button>
-        </div>
+        <form class="upload-session" action="/upload-session" method="POST" enctype="multipart/form-data">
+            <input type="file" name="session_files" class="upload-session-input" accept=".session,.json" multiple required>
+            <button type="submit" class="upload-session-button">Загрузить сессию</button>
+        </form>
     </div>
 
     <div class="sessions-container">
+      {% for session in all_sessions%}
         <div class="session-block">
-            <h3>Сессия 1</h3>
-            <p class="session-status">Статус: Актив</p>
-            <p class="session-date">Дата: 10-10-2025</p>
-            <button class="delete-session-button">Удалить сессию</button>
-        </div>
-        <div class="session-block">
-            <h3>Сессия 2</h3>
-            <p class="session-status">Статус: Инактив</p>
-            <p class="session-date">Дата: 10-10-2025</p>
-            <button class="delete-session-button">Удалить сессию</button>
-        </div>
-        <div class="session-block">
-            <h3>Сессия 3</h3>
-            <p class="session-status">Статус: Актив</p>
-            <p class="session-date">Дата: 10-10-2025</p>
-            <button class="delete-session-button">Удалить сессию</button>
-        </div>
+          <h3>Session id: {{ session.id }}</h3>
+          <p class="session-status">Статус: {{ "Активна" if session.is_valid else "Инвалид" }}</p>
+          <p class="session-date">Дата: {{ session.date }}</p>
+          <p class="session-date">User_id: {{ session.account_id }}</p>
+          <div class="session-buttons">
+              <form method="POST" action="/delete-session" style="display:inline;">
+                  <input type="hidden" name="session_id" value="{{ session.id }}">
+                  <button type="submit" class="delete-session-button">Удалить сессию</button>
+              </form>
+              <a href="/session-info/{{ session.id }}" class="info-session-button">Инфо</a>
+          </div>
+      </div>
+      {% endfor %}
     </div>
 </div>
 {% endblock %}

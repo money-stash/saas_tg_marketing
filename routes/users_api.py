@@ -37,6 +37,17 @@ async def add_user():
     return jsonify({"status": "ok"})
 
 
+@users_bp.route("/update-user-login", methods=["POST"])
+async def update_add_user():
+    user_id = request.form.get("user_id")
+    username = request.form.get("username")
+    key = request.form.get("key")
+
+    await db.bind_user_to_token(user_id, username, key)
+
+    return jsonify({"status": "ok"})
+
+
 @users_bp.route("/get_key_info", methods=["POST"])
 async def get_key_info():
     key = request.form.get("key")

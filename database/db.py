@@ -10,6 +10,7 @@ from utils.logger import logger
 
 from models.workers import Worker
 from models.access_tokens import AccessToken
+from models.sessions import Session
 
 from config import DB_PATH
 
@@ -81,6 +82,22 @@ class Database:
             await session.execute(delete(Worker).where(Worker.id == id))
             await session.commit()
 
+    async def block_user(self, id: int):
+        async with self.get_session() as session:
+            await session.execute(
+                update(Worker).where(Worker.id == id).values(status=False)
+            )
+            await session.commit()
+            logger.info(f"Worker {id} blocked")
+
+    async def unblock_user(self, id: int):
+        async with self.get_session() as session:
+            await session.execute(
+                update(Worker).where(Worker.id == id).values(status=True)
+            )
+            await session.commit()
+            logger.info(f"Worker {id} unblocked")
+
     ##########                          ##########
     ##########   AccessToken methods    ##########
     ##########                          ##########
@@ -107,9 +124,26 @@ class Database:
 
     async def delete_token(self, id: int):
         async with self.get_session() as session:
-            await session.execute(delete(AccessToken).where(AccessToken.id == id))
+            result = await session.execute(
+                select(AccessToken).where(AccessToken.id == id)
+            )
+            token = result.scalar_one_or_none()
+            if not token:
+                logger.warning(f"Token {id} not found")
+                return
+
+            user_id = token.user_id
+
+            worker_result = await session.execute(
+                select(Worker).where(Worker.user_id == user_id)
+            )
+            worker = worker_result.scalar_one_or_none()
+            if worker:
+                worker.key_id = 0
+
+            await session.delete(token)
             await session.commit()
-            logger.info(f"Token {id} deleted")
+            logger.info(f"Token {id} deleted and worker key_id reset if applicable")
 
     async def get_token_by_key(self, key: str) -> AccessToken | None:
         async with self.get_session() as session:
@@ -145,6 +179,36 @@ class Database:
                 f"Token and worker updated for user_id: {user_id}, username: {username}"
             )
             return True
+
+    ##########                          ##########
+    ##########      Session methods     ##########
+    ##########                          ##########
+
+    async def add_session(self, account_id: int, path: str, is_valid: bool = True):
+        async with self.get_session() as session:
+            now = datetime.now().strftime("%d-%m-%Y")
+            new_session = Session(
+                account_id=account_id, path=path, is_valid=is_valid, date=now
+            )
+            session.add(new_session)
+            await session.commit()
+
+    async def delete_session(self, session_id: int):
+        async with self.get_session() as session:
+            await session.execute(delete(Session).where(Session.id == session_id))
+            await session.commit()
+
+    async def get_all_sessions(self) -> list[Session]:
+        async with self.get_session() as session:
+            result = await session.execute(select(Session))
+            return result.scalars().all()
+
+    async def get_session_by_id(self, session_id: int) -> Session | None:
+        async with self.get_session() as session:
+            result = await session.execute(
+                select(Session).where(Session.id == session_id)
+            )
+            return result.scalar_one_or_none()
 
 
 db = Database()

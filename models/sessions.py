@@ -6,6 +6,7 @@ class Session(Base):
     __tablename__ = "sessions"
 
     id = Column(Integer, primary_key=True)
+    date = Column(String)
+    account_id = Column(Integer)
     path = Column(String)
-    worker_id = Column(Integer)
     is_valid = Column(Boolean, default=True)
