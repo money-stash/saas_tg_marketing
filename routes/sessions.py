@@ -1,6 +1,6 @@
 import os
 
-from flask import Blueprint, render_template, request, redirect, url_for
+from flask import Blueprint, render_template, request, redirect, url_for, jsonify
 
 from database.db import db
 from config import UPLOAD_FOLDER
@@ -14,6 +14,42 @@ async def open_sessions():
     all_sessions = await db.get_all_sessions()
 
     return render_template("sessions.html", all_sessions=all_sessions)
+
+
+@sessions_bp.route("/get-all-sessions")
+async def get_all_sessions():
+    all_sessions = await db.get_all_sessions()
+
+    sessions_data = []
+    for session in all_sessions:
+        sessions_data.append(
+            {
+                "id": session.id,
+                "account_id": session.account_id,
+                "is_valid": session.is_valid,
+                "date": session.date,
+            }
+        )
+
+    return jsonify({"sessions": sessions_data})
+
+
+@sessions_bp.route("/get-session-by-id/<int:session_id>")
+async def get_session_by_id(session_id):
+    session_info = await db.get_session_by_id(int(session_id))
+
+    if not session_info:
+        return jsonify({"error": "Session not found"}), 404
+
+    session_data = {
+        "id": session_info.id,
+        "account_id": session_info.account_id,
+        "is_valid": session_info.is_valid,
+        "path": session_info.path,
+        "date": session_info.date,
+    }
+
+    return jsonify({"session": session_data})
 
 
 @sessions_bp.route("/upload-session", methods=["POST"])
