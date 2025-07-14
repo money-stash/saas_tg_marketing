@@ -19,7 +19,6 @@ async def check_session_with_config(session_path: str, json_path: str):
         )
 
         async with client:
-            # Проверяем через get_me()
             me = await client.get_me()
             if not me:
                 print("SESSION IS DEAD")
@@ -52,7 +51,6 @@ async def print_session_info(session_path: str, json_path: str):
             print(f"Фамилия: {me.last_name if me.last_name else 'Нет'}")
             print(f"Юзернейм: @{me.username if me.username else 'Нет'}")
 
-            # Аватарка
             photos = await client.get_profile_photos("me", limit=1)
             if photos.total_count > 0:
                 photo = photos.photos[0]
@@ -63,7 +61,6 @@ async def print_session_info(session_path: str, json_path: str):
 
             else:
                 print("Аватарка отсутствует")
-                # Параметры конфиденциальности
                 privacy_settings = await client.invoke(
                     pyrogram.raw.functions.account.GetPrivacy(
                         key=pyrogram.raw.types.InputPrivacyKeyStatusTimestamp()
