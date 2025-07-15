@@ -1,0 +1,165 @@
+body {
+    background-color: #1e1e1e;
+    color: #fff;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+}
+
+.sessions-page {
+    padding: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.session-edit-container {
+    width: 100%;
+    max-width: 500px;
+    background-color: #2b2b2b;
+    border: 1px solid #444;
+    border-radius: 10px;
+    padding: 24px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
+}
+
+.session-edit-block {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.avatar-section {
+    text-align: center;
+}
+
+.session-avatar-large {
+    width: 90px;
+    height: 90px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 2px solid #555;
+    margin-bottom: 10px;
+}
+
+.no-avatar-text {
+    font-size: 14px;
+    color: #999;
+    margin-bottom: 10px;
+}
+
+.upload-avatar-button {
+    margin-top: 8px;
+    padding: 6px 12px;
+    background-color: #3b3b3b;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+
+.upload-avatar-button:hover {
+    background-color: #555;
+}
+
+.session-info-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.session-info-form label {
+    font-size: 14px;
+    margin-bottom: 4px;
+    font-weight: 500;
+}
+
+.session-info-form input {
+    background-color: #1e1e1e;
+    border: 1px solid #666;
+    border-radius: 5px;
+    color: white;
+    padding: 8px 10px;
+    font-size: 14px;
+}
+
+.session-privacy {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    color: #ccc;
+}
+
+.privacy-toggle-btn {
+    padding: 5px 12px;
+    background-color: #3a3a3a;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.privacy-toggle-btn:hover {
+    background-color: #008060;
+}
+
+.save-session-button {
+    padding: 8px 14px;
+    background-color: #00a86b;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 15px;
+    transition: background-color 0.2s;
+}
+
+.save-session-button:hover {
+    background-color: #008c5a;
+}
+
+.input-with-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.input-with-btn label {
+    min-width: 70px;
+    margin-bottom: 0;
+}
+
+.input-with-btn input[type="text"] {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.inline-field-form {
+    display: inline;
+}
+
+.field-save-btn {
+    padding: 5px 12px;
+    background-color: #007a3d;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: background-color 0.2s;
+    margin-left: 6px;
+}
+
+.field-save-btn:hover {
+    background-color: #005e2e;
+}

@@ -1,10 +1,20 @@
 import asyncio
+import random
+from random import randint
 from playwright.async_api import (
     async_playwright,
     TimeoutError as PlaywrightTimeoutError,
 )
 from pyro_funcs.login_funcs import get_full_phone_number, get_login_code
 import os
+from config import PROXY_FILE
+
+
+def get_random_proxy():
+    with open(PROXY_FILE, "r") as f:
+        lines = [line.strip() for line in f if line.strip()]
+    return random.choice(lines)
+
 
 TELEGRAM_URL = "https://web.telegram.org/a/"
 LOGIN_BUTTON_TEXT = "Log in by phone Number"
@@ -22,6 +32,10 @@ async def handle_telegram_login(
     username="new_username",
 ):
     async with async_playwright() as p:
+        # proxy = get_random_proxy()
+        # ip, port, user, password = proxy.split(":")
+        # proxy_server = f"http://{ip}:{port}"
+        # proxy_creds = {"server": proxy_server, "username": user, "password": password}
         browser = await p.chromium.launch(headless=False)
         context = await browser.new_context()
         page = await context.new_page()
@@ -43,13 +57,12 @@ async def handle_telegram_login(
         phone_number = await get_full_phone_number(
             session_path=session_path, json_path=json_path
         )
-
         if phone_number:
             input_element = await page.wait_for_selector("#sign-in-phone-number")
             await input_element.fill("")
             await input_element.type(phone_number)
 
-            await asyncio.sleep(2)
+            await asyncio.sleep(randint(3, 6))
 
             next_button = page.get_by_text("Next")
             await next_button.click()
@@ -68,7 +81,7 @@ async def handle_telegram_login(
                 await code_input.fill("")
                 await code_input.type(login_code)
 
-                await asyncio.sleep(5)
+                await asyncio.sleep(randint(3, 6))
 
                 await page.wait_for_selector(
                     "xpath=/html/body/div[2]/div/div[1]/div/div[1]/div/div[1]/button/div[2]",
@@ -77,7 +90,7 @@ async def handle_telegram_login(
                 await page.click(
                     "xpath=/html/body/div[2]/div/div[1]/div/div[1]/div/div[1]/button/div[2]"
                 )
-                await asyncio.sleep(2)
+                await asyncio.sleep(randint(3, 6))
                 await page.wait_for_selector(
                     "xpath=/html/body/div[2]/div/div[1]/div/div[1]/div/div[1]/div/div[2]/div[1]",
                     timeout=10000,
@@ -94,10 +107,10 @@ async def handle_telegram_login(
                 await page.click(
                     "xpath=/html/body/div[2]/div/div[1]/div[2]/div/div[1]/div[1]/div/button/div"
                 )
-                await asyncio.sleep(2)
+                await asyncio.sleep(randint(3, 6))
 
                 print("Clicked elements for changing")
-                await asyncio.sleep(2)
+                await asyncio.sleep(randint(3, 6))
 
                 # ИЗМЕНЯЕМ АВУ
                 if action == "change_image":
@@ -107,7 +120,7 @@ async def handle_telegram_login(
                             "images/avatar.jpg",
                         )
 
-                        await asyncio.sleep(2)
+                        await asyncio.sleep(randint(3, 6))
                         await page.click(
                             "xpath=/html/body/div[1]/div[2]/div/div/div[2]/div[2]/div/div[2]/button"
                         )
@@ -182,12 +195,11 @@ async def handle_telegram_login(
                     except Exception as e:
                         print(f"Failed to change last name: {e}")
 
-                await asyncio.sleep(2)
+                await asyncio.sleep(randint(3, 6))
                 await page.click(
                     ".Button.FloatingActionButton.revealed.default.primary.round"
                 )
 
-                await asyncio.sleep(200)
             else:
                 print("Login code not found. Please check your session and JSON files.")
                 await browser.close()
@@ -196,15 +208,15 @@ async def handle_telegram_login(
         else:
             print("Phone number not found.")
 
-        await asyncio.sleep(TIMEOUT_BEFORE_CLOSE)
+        await asyncio.sleep(2000)
         await browser.close()
 
 
 if __name__ == "__main__":
     asyncio.run(
         handle_telegram_login(
-            session_path="sessions/7742837753",
-            json_path="sessions/7742837753.json",
+            session_path="sessions/179422896",
+            json_path="sessions/179422896.json",
             action="change_name",
         )
     )

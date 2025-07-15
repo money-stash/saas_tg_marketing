@@ -210,5 +210,12 @@ class Database:
             )
             return result.scalar_one_or_none()
 
+    async def get_session_by_session_path(self, session_path: str) -> Session | None:
+        async with self.get_session() as session:
+            result = await session.execute(
+                select(Session).where(Session.path == session_path)
+            )
+            return result.scalar_one_or_none()
+
 
 db = Database()
