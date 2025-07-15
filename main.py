@@ -6,6 +6,7 @@ from database.db import db
 
 
 app = Flask(__name__, template_folder="frontend", static_folder="frontend/static")
+app.secret_key = "super_secret_value_123"
 register_blueprints(app)
 
 

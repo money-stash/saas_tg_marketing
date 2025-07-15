@@ -8,59 +8,57 @@
 <div class="sessions-page">
     <div class="session-edit-container">
         <div class="session-edit-block">
-            <form method="POST" action="/save-session-info/{{ session_id }}" class="session-info-form">
-                <div class="avatar-section">
-                    {% if session_has_avatar %}
-                        <img src="{{ url_for('static', filename='images/' + session_id + '.jpg') }}" alt="avatar" class="session-avatar-large">
-                    {% else %}
-                        <p class="no-avatar-text">Аватар отсутствует</p>
-                    {% endif %}
-                    <form method="POST" action="/upload-avatar/{{ session_id }}" enctype="multipart/form-data" class="avatar-upload-form">
-                        <input type="file" name="avatar" accept="image/*" required>
-                        <button type="submit" class="upload-avatar-button">Загрузить новую аватарку</button>
-                    </form>
-                </div>
+            <div class="avatar-section">
+                {% if session_has_avatar %}
+                    <img src="{{ url_for('static', filename='images/' + session_id + '.jpg') }}" alt="avatar" class="session-avatar-large">
+                {% else %}
+                    <p class="no-avatar-text">Аватар отсутствует</p>
+                {% endif %}
+                <form method="POST" action="/upload-avatar/{{ session_id }}" enctype="multipart/form-data" class="avatar-upload-form">
+                    <input type="file" name="avatar" accept="image/*" required>
+                    <button type="submit" class="upload-avatar-button">Загрузить новую аватарку</button>
+                </form>
+            </div>
 
-                <div class="input-with-btn">
-                    <label>Имя:</label>
-                    <input type="text" name="first_name" value="{{ first_name }}" required>
-                    <form method="POST" action="/update-field/{{ session_id }}/first_name" class="inline-field-form">
-                        <input type="hidden" name="value" value="" class="field-value-input">
-                        <button type="submit" class="field-save-btn">Сохранить</button>
-                    </form>
-                </div>
+            <div class="input-with-btn">
+                <label>Имя:</label>
+                <input type="text" name="first_name" value="{{ first_name }}" required>
+                <form method="POST" action="/update-field/{{ session_id }}/first_name" class="inline-field-form">
+                    <input type="hidden" name="value" value="" class="field-value-input">
+                    <button type="submit" class="field-save-btn">Сохранить</button>
+                </form>
+            </div>
 
-                <div class="input-with-btn">
-                    <label>Фамилия:</label>
-                    <input type="text" name="last_name" value="{{ last_name }}" required>
-                    <form method="POST" action="/update-field/{{ session_id }}/last_name" class="inline-field-form">
-                        <input type="hidden" name="value" value="" class="field-value-input">
-                        <button type="submit" class="field-save-btn">Сохранить</button>
-                    </form>
-                </div>
+            <div class="input-with-btn">
+                <label>Фамилия:</label>
+                <input type="text" name="last_name" value="{{ last_name }}" required>
+                <form method="POST" action="/update-field/{{ session_id }}/last_name" class="inline-field-form">
+                    <input type="hidden" name="value" value="" class="field-value-input">
+                    <button type="submit" class="field-save-btn">Сохранить</button>
+                </form>
+            </div>
 
-                <div class="input-with-btn">
-                    <label>Username:</label>
-                    <input type="text" name="username" value="{{ username }}" required>
-                    <form method="POST" action="/update-field/{{ session_id }}/username" class="inline-field-form">
-                        <input type="hidden" name="value" value="" class="field-value-input">
-                        <button type="submit" class="field-save-btn">Сохранить</button>
-                    </form>
-                </div>
+            <div class="input-with-btn">
+                <label>Username:</label>
+                <input type="text" name="username" value="{{ username }}" required>
+                <form method="POST" action="/update-field/{{ session_id }}/username" class="inline-field-form">
+                    <input type="hidden" name="value" value="" class="field-value-input">
+                    <button type="submit" class="field-save-btn">Сохранить</button>
+                </form>
+            </div>
 
-                <p class="session-privacy">
-                    Конфиденциальность: {% if is_private %}Закрыта{% else %}Открыта{% endif %}
-                    {% if is_private %}
-                        <form method="POST" action="/set-privacy/{{ session_id }}/open" style="display:inline;">
-                            <button type="submit" class="privacy-toggle-btn">Открыть конфиденциальность</button>
-                        </form>
-                    {% else %}
-                        <form method="POST" action="/set-privacy/{{ session_id }}/close" style="display:inline;">
-                            <button type="submit" class="privacy-toggle-btn">Закрыть конфиденциальность</button>
-                        </form>
-                    {% endif %}
-                </p>
-            </form>
+            <p class="session-privacy">
+                Конфиденциальность: {% if is_private %}Закрыта{% else %}Открыта{% endif %}
+                {% if is_private %}
+                    <form method="POST" action="/set-privacy/{{ session_id }}/open" style="display:inline;">
+                        <button type="submit" class="privacy-toggle-btn">Открыть конфиденциальность</button>
+                    </form>
+                {% else %}
+                    <form method="POST" action="/set-privacy/{{ session_id }}/close" style="display:inline;">
+                        <button type="submit" class="privacy-toggle-btn">Закрыть конфиденциальность</button>
+                    </form>
+                {% endif %}
+            </p>
         </div>
     </div>
 </div>
