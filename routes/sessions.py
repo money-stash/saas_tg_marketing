@@ -5,6 +5,14 @@ from flask import Blueprint, render_template, request, redirect, url_for, jsonif
 from database.db import db
 from config import UPLOAD_FOLDER
 from pyro_funcs.checker import check_session_with_config
+from pyro_funcs.login_funcs import (
+    get_session_info,
+    set_privacy_all_open,
+    update_profile_photo,
+    change_first_name,
+    change_last_name,
+    change_username,
+)
 
 sessions_bp = Blueprint("sessions", __name__)
 
@@ -38,6 +46,11 @@ async def get_all_sessions():
 async def get_session_by_id(session_id):
     session_info = await db.get_session_by_id(int(session_id))
 
+    session_path = session_info.path
+    json_path = session_path + ".json"
+
+    session_pyro_info = await get_session_info(session_path, json_path)
+
     if not session_info:
         return jsonify({"error": "Session not found"}), 404
 
@@ -45,8 +58,11 @@ async def get_session_by_id(session_id):
         "id": session_info.id,
         "account_id": session_info.account_id,
         "is_valid": session_info.is_valid,
-        "path": session_info.path,
         "date": session_info.date,
+        "first_name": session_pyro_info.get("first_name", ""),
+        "last_name": session_pyro_info.get("last_name", ""),
+        "username": session_pyro_info.get("username", ""),
+        "is_private": session_pyro_info.get("is_private", False),
     }
 
     return jsonify({"session": session_data})
@@ -160,3 +176,105 @@ async def delete_session():
         await db.delete_session(int(session_id))
 
     return redirect(url_for("sessions.open_sessions"))
+
+
+@sessions_bp.route("/open-privacy", methods=["POST"])
+async def open_privacy():
+    session_id = request.form.get("session_id")
+
+    session_info = await db.get_session_by_id(session_id)
+    session_path = session_info.path
+    json_path = session_path + ".json"
+
+    is_changed = await set_privacy_all_open(session_path, json_path)
+
+    return jsonify({"success": is_changed})
+
+
+@sessions_bp.route("/change-name", methods=["POST"])
+async def change_name_func():
+    session_id = request.form.get("session_id")
+    new_first_name = request.form.get("first_name")
+
+    session_info = await db.get_session_by_id(session_id)
+    session_path = session_info.path
+    json_path = session_path + ".json"
+
+    is_changed = await change_first_name(session_path, json_path, new_first_name)
+
+    return jsonify({"success": is_changed})
+
+
+@sessions_bp.route("/change-surname", methods=["POST"])
+async def change_surname_func():
+    session_id = request.form.get("session_id")
+    new_surname = request.form.get("surname")
+
+    session_info = await db.get_session_by_id(session_id)
+    session_path = session_info.path
+    json_path = session_path + ".json"
+
+    is_changed = await change_last_name(session_path, json_path, new_surname)
+
+    return jsonify({"success": is_changed})
+
+
+@sessions_bp.route("/change-username", methods=["POST"])
+async def change_username_func():
+    session_id = request.form.get("session_id")
+    new_username = request.form.get("username")
+
+    session_info = await db.get_session_by_id(session_id)
+    session_path = session_info.path
+    json_path = session_path + ".json"
+
+    is_changed = await change_username(session_path, json_path, new_username)
+
+    return jsonify({"success": is_changed})
+
+
+@sessions_bp.route("/upload-avatar-api/<session_id>", methods=["POST"])
+async def upload_avatar_api(session_id):
+    try:
+        avatar_file = request.files.get("avatar")
+        if not avatar_file:
+            return jsonify({"success": False, "error": "Файл не получен"}), 400
+
+        session_record = await db.get_session_by_id(session_id)
+        session_path = session_record.path
+        json_path = session_path + ".json"
+
+        filename = f"{session_path.split('/')[-1]}.jpg"
+        save_path = os.path.join("frontend", "static", "images", filename)
+        avatar_file.save(save_path)
+
+        session_info = await get_session_info(session_path, json_path)
+
+        info = {
+            "first_name": session_info.get("first_name", "Иван"),
+            "last_name": session_info.get("last_name", "Иванов"),
+            "username": session_info.get("username", "ivanovv"),
+            "is_private": session_info.get("is_private"),
+        }
+
+        answer = await update_profile_photo(session_path, json_path, save_path)
+
+        if answer:
+            return jsonify(
+                {
+                    "success": True,
+                    "session_id": session_id,
+                    "first_name": info["first_name"],
+                    "last_name": info["last_name"],
+                    "username": info["username"],
+                    "is_private": info["is_private"],
+                }
+            )
+        else:
+            return (
+                jsonify({"success": False, "error": "Не удалось обновить аватар"}),
+                500,
+            )
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
