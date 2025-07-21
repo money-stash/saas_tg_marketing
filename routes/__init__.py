@@ -6,6 +6,7 @@ from .logs import logs_bp
 from .statistic import statistic_bp
 from .users_api import users_bp
 from .sessions_info import session_info_bp
+from .tasks_api import tasks_bp
 
 
 def register_blueprints(app):
@@ -17,3 +18,4 @@ def register_blueprints(app):
     app.register_blueprint(statistic_bp)
     app.register_blueprint(users_bp)
     app.register_blueprint(session_info_bp)
+    app.register_blueprint(tasks_bp)

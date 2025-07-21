@@ -3,7 +3,7 @@ import os
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 
 from database.db import db
-from pyro_funcs.login_funcs import (
+from login_funcs import (
     get_session_info,
     update_profile_photo,
     change_username,

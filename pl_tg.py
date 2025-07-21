@@ -5,7 +5,7 @@ from playwright.async_api import (
     async_playwright,
     TimeoutError as PlaywrightTimeoutError,
 )
-from pyro_funcs.login_funcs import get_full_phone_number, get_login_code
+from login_funcs import get_full_phone_number, get_login_code
 import os
 from config import PROXY_FILE
 

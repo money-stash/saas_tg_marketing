@@ -1,8 +1,15 @@
-import asyncio
-import json
 import os
 import re
+import csv
+import json
+import random
+import asyncio
+from datetime import datetime
 from pyrogram import Client, raw
+from pyrogram.errors import SessionRevoked
+
+from utils.logger import logger
+from database.db import db
 
 
 async def get_full_phone_number(session_path: str, json_path: str) -> str | None:
@@ -304,7 +311,97 @@ async def get_session_info(session_path: str, json_path: str) -> dict:
         print("Ошибка при получении информации о сессии:", e)
 
 
+async def join_and_parse_group(
+    group_username: str, session_path: str, json_path: str, message_limit: int
+):
+    try:
+        with open(json_path, "r") as f:
+            config = json.load(f)
+
+        client = Client(
+            name=os.path.basename(session_path),
+            workdir=os.path.dirname(session_path),
+            api_id=config["app_id"],
+            api_hash=config["app_hash"],
+        )
+
+        async with client:
+            try:
+                await client.join_chat(group_username)
+            except Exception as e:
+                print("Ошибка при вступлении в группу:", e)
+            users = {}
+            fetched = 0
+            batch_size = 50
+            offset_id = 0
+
+            os.makedirs("work_reports", exist_ok=True)
+            out_path = os.path.join(
+                "work_reports", f"{os.path.basename(session_path)}_group_users.csv"
+            )
+            f = open(out_path, "a", encoding="utf-8", newline="")
+            writer = csv.writer(f)
+            if os.stat(out_path).st_size == 0:
+                writer.writerow(["user_id", "first_name", "last_name", "username"])
+
+            try:
+                while fetched < message_limit:
+                    limit = min(batch_size, message_limit - fetched)
+                    async for message in client.get_chat_history(
+                        group_username, limit=limit, offset_id=offset_id
+                    ):
+                        offset_id = message.id
+                        user = message.from_user
+                        if user and user.id not in users:
+                            users[user.id] = {
+                                "id": user.id,
+                                "first_name": user.first_name or "",
+                                "last_name": user.last_name or "",
+                                "username": user.username if user.username else "None",
+                            }
+                            writer.writerow(
+                                [
+                                    user.id,
+                                    user.first_name or "",
+                                    user.last_name or "",
+                                    user.username or "None",
+                                ]
+                            )
+                            f.flush()
+                        fetched += 1
+                    await asyncio.sleep(random.uniform(5.0, 20.0))
+                    logger.info(
+                        f"Parsed {fetched} messages, total unique users: {len(users)}"
+                    )
+            except SessionRevoked:
+                logger.error("Сессия недействительна / отозвана")
+                return 0
+            finally:
+                f.close()
+
+            await db.add_report(
+                date=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                worker_id=int(1),
+                path=out_path,
+                type_="parse",
+            )
+            return len(users)
+
+    except Exception as e:
+        print("Ошибка:", e)
+        return False
+
+
 # if __name__ == "__main__":
+#     result = asyncio.run(
+#         join_and_parse_group(
+#             group_username="aiogramua",
+#             session_path="sessions/180033304",
+#             json_path="sessions/180033304.json",
+#             message_limit=100,
+#         )
+#     )
+#     print("Результат:", result)
 #     # result = asyncio.run(
 #     #     change_username("sessions/179279285", "sessions/179279285.json", "kilohilo13")
 #     # )

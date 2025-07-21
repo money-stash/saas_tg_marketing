@@ -5,7 +5,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, jsonif
 from database.db import db
 from config import UPLOAD_FOLDER
 from pyro_funcs.checker import check_session_with_config
-from pyro_funcs.login_funcs import (
+from login_funcs import (
     get_session_info,
     set_privacy_all_open,
     update_profile_photo,

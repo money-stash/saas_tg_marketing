@@ -11,6 +11,7 @@ from utils.logger import logger
 from models.workers import Worker
 from models.access_tokens import AccessToken
 from models.sessions import Session
+from models.reports import Report
 
 from config import DB_PATH
 
@@ -215,6 +216,27 @@ class Database:
             result = await session.execute(
                 select(Session).where(Session.path == session_path)
             )
+            return result.scalar_one_or_none()
+
+    ##########                          ##########
+    ##########     Report methods       ##########
+    ##########                          ##########
+
+    async def add_report(self, date: str, worker_id: int, path: str, type_: str):
+        async with self.get_session() as session:
+            report = Report(date=date, worker_id=worker_id, path=path, type=type_)
+            session.add(report)
+            await session.commit()
+            logger.info(f"Report added: {path}")
+
+    async def get_all_reports(self) -> list[Report]:
+        async with self.get_session() as session:
+            result = await session.execute(select(Report))
+            return result.scalars().all()
+
+    async def get_report_by_id(self, report_id: int) -> Report | None:
+        async with self.get_session() as session:
+            result = await session.execute(select(Report).where(Report.id == report_id))
             return result.scalar_one_or_none()
 
 
