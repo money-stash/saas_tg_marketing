@@ -312,8 +312,13 @@ async def get_session_info(session_path: str, json_path: str) -> dict:
 
 
 async def join_and_parse_group(
-    group_username: str, session_path: str, json_path: str, message_limit: int
+    group_username: str,
+    session_path: str,
+    json_path: str,
+    message_limit: int,
+    user_id: int,
 ):
+    added_task = await db.add_task(task_type="parse", status=True, logs="text.txt")
     try:
         with open(json_path, "r") as f:
             config = json.load(f)
@@ -337,7 +342,7 @@ async def join_and_parse_group(
 
             os.makedirs("work_reports", exist_ok=True)
             out_path = os.path.join(
-                "work_reports", f"{os.path.basename(session_path)}_group_users.csv"
+                "work_reports", f"{random.randint(100000,1000000)}_group_users.csv"
             )
             f = open(out_path, "a", encoding="utf-8", newline="")
             writer = csv.writer(f)
@@ -373,18 +378,27 @@ async def join_and_parse_group(
                     logger.info(
                         f"Parsed {fetched} messages, total unique users: {len(users)}"
                     )
+
+                    await db.delete_task(added_task)
+
             except SessionRevoked:
+                await db.delete_task(added_task)
                 logger.error("Сессия недействительна / отозвана")
                 return 0
+
+            except:
+                await db.delete_task(added_task)
+
             finally:
                 f.close()
 
             await db.add_report(
                 date=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                worker_id=int(1),
+                worker_id=user_id,
                 path=out_path,
                 type_="parse",
             )
+
             return len(users)
 
     except Exception as e:
@@ -392,16 +406,41 @@ async def join_and_parse_group(
         return False
 
 
+async def send_message_from_session(session_path, json_path, username, text) -> bool:
+    try:
+        with open(json_path) as f:
+            cfg = json.load(f)
+
+        client = Client(
+            name=os.path.basename(session_path),
+            workdir=os.path.dirname(session_path),
+            api_id=cfg["app_id"],
+            api_hash=cfg["app_hash"],
+        )
+
+        async with client:
+            async for _ in client.get_dialogs(limit=200):
+                pass
+
+            await client.send_message(chat_id=username, text=text)
+            return True
+
+    except Exception as e:
+        print("Ошибка при отправке сообщения:", e)
+        return False
+
+
 # if __name__ == "__main__":
 #     result = asyncio.run(
-#         join_and_parse_group(
-#             group_username="aiogramua",
-#             session_path="sessions/180033304",
-#             json_path="sessions/180033304.json",
-#             message_limit=100,
+#         send_message_from_session(
+#             session_path="sessions/179935479",
+#             json_path="sessions/179935479.json",
+#             username="makson8567",
+#             text="Hello from session!",
 #         )
 #     )
 #     print("Результат:", result)
+
 #     # result = asyncio.run(
 #     #     change_username("sessions/179279285", "sessions/179279285.json", "kilohilo13")
 #     # )

@@ -1,6 +1,6 @@
 from database.db import db
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, send_file
 from login_funcs import join_and_parse_group
 from utils.tg_utils import send_message_to_user
 import os
@@ -46,6 +46,7 @@ async def create_task_parse():
         session_path=session_path,
         json_path=json_path,
         message_limit=100,
+        user_id=worker_id,
     )
 
     await send_message_to_user(
@@ -56,3 +57,51 @@ async def create_task_parse():
     return jsonify(
         {"task": True, "worker_id": worker_id, "group_identifier": group_identifier}
     )
+
+
+@tasks_bp.route("/all-reports")
+async def get_all_reportsss():
+    all_reports = await db.get_all_reports()
+
+    reports_data = []
+    for report in all_reports:
+        reports_data.append(
+            {
+                "id": report.id,
+                "date": report.date,
+                "worker_id": report.worker_id,
+                "path": report.path,
+                "type": report.type,
+            }
+        )
+
+    return jsonify({"reports": reports_data})
+
+
+@tasks_bp.route("/get_report", methods=["POST"])
+async def get_task():
+    task_data = request.json
+    report_id = task_data.get("report_id")
+
+    report = await db.get_report_by_id(report_id)
+
+    data = {
+        "id": report.id,
+        "date": report.date,
+        "worker_id": report.worker_id,
+        "path": report.path,
+        "type": report.type,
+    }
+
+    return jsonify(data)
+
+
+@tasks_bp.route("/download-report", methods=["POST"])
+async def download_report():
+    data = request.json
+    path = data.get("path")
+
+    if not path or not os.path.exists(path):
+        return jsonify({"error": "Invalid or missing path"}), 400
+
+    return send_file(path, as_attachment=True)

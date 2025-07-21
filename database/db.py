@@ -12,6 +12,7 @@ from models.workers import Worker
 from models.access_tokens import AccessToken
 from models.sessions import Session
 from models.reports import Report
+from models.tasks import Task
 
 from config import DB_PATH
 
@@ -238,6 +239,27 @@ class Database:
         async with self.get_session() as session:
             result = await session.execute(select(Report).where(Report.id == report_id))
             return result.scalar_one_or_none()
+
+    ##########                          ##########
+    ##########      Task methods        ##########
+    ##########                          ##########
+
+    async def add_task(
+        self, task_type: str, status: bool = True, logs: str = ""
+    ) -> int:
+        async with self.get_session() as session:
+            task = Task(task_type=task_type, status=status, logs=logs)
+            session.add(task)
+            await session.flush()
+            await session.commit()
+            logger.info(f"Task added: type={task_type}")
+            return task.id
+
+    async def delete_task(self, task_id: int):
+        async with self.get_session() as session:
+            await session.execute(delete(Task).where(Task.id == task_id))
+            await session.commit()
+            logger.info(f"Task deleted: id={task_id}")
 
 
 db = Database()
