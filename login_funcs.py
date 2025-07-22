@@ -430,13 +430,42 @@ async def send_message_from_session(session_path, json_path, username, text) -> 
         return False
 
 
+async def print_last_messages(
+    session_path: str, json_path: str, messages_count: int = 5
+):
+    try:
+        with open(json_path, "r") as f:
+            cfg = json.load(f)
+
+        client = Client(
+            name=os.path.basename(session_path),
+            workdir=os.path.dirname(session_path),
+            api_id=cfg["app_id"],
+            api_hash=cfg["app_hash"],
+        )
+
+        async with client:
+            async for dialog in client.get_dialogs():
+                title = (
+                    getattr(dialog.chat, "title", None)
+                    or getattr(dialog.chat, "first_name", None)
+                    or str(dialog.chat.id)
+                )
+                print(f"\n--- Диалог: {title} ---")
+                async for msg in client.get_chat_history(
+                    dialog.chat.id, limit=messages_count
+                ):
+                    sender = msg.from_user.first_name if msg.from_user else "Unknown"
+                    print(f"[{msg.date}] {sender}: {msg.text}")
+    except Exception as e:
+        print("Ошибка при получении сообщений:", e)
+
+
 # if __name__ == "__main__":
 #     result = asyncio.run(
-#         send_message_from_session(
-#             session_path="sessions/179935479",
-#             json_path="sessions/179935479.json",
-#             username="makson8567",
-#             text="Hello from session!",
+#         print_last_messages(
+#             session_path="sessions/179781882",
+#             json_path="sessions/179781882.json",
 #         )
 #     )
 #     print("Результат:", result)
