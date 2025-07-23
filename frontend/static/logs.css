@@ -1,6 +1,7 @@
 body {
-    background-color: #202020;
+    background-color: #101935;
     color: #ffffff;
+    font-family: 'Poppins', sans-serif;
 }
 
 .logs-page {
@@ -8,6 +9,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 20px;
+    background-color: #080F25;
 }
 
 .logs-controls {
@@ -21,9 +23,9 @@ body {
 .search-logs-input {
     flex: 1 1 300px;
     padding: 8px 12px;
-    border: 1px solid white;
+    border: 0.5px solid rgba(255, 255, 255, 0.8);
     border-radius: 4px;
-    background-color: #282828;
+    background-color: #181f37;
     color: white;
     font-size: 16px;
 }
@@ -39,32 +41,62 @@ body {
 }
 
 .logs-block {
-    background-color: #2a2a2a;
-    border: 1px solid white;
+    background-color: #181f37;
+    border: 0.5px solid rgba(255, 255, 255, 0.8);
     padding: 15px;
     border-radius: 8px;
     color: #ffffff;
-    width: 200px;
+    min-width: 350px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
-.log-status,
-.log-date,
-.log-type {
+.logs-block h3 {
+    margin: 0;
+    margin-bottom: 5px;
+}
+
+.log-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
     font-size: 14px;
-    margin-top: 5px;
     color: #cccccc;
+    flex-wrap: wrap;
+}
+
+.log-info span {
+    white-space: nowrap;
 }
 
 .download-log-button {
-    margin-top: 10px;
     padding: 8px 12px;
-    background-color: #00aaff;
+    background: linear-gradient(to right, #CB3CFF, #7F25FB);
     color: #000;
-    border: none;
+    border: 1px solid rgba(0, 0, 0, 0.80);
     border-radius: 4px;
     cursor: pointer;
+    transition: background-position 0.5s ease;
+    background-size: 200% 100%;
+    background-position: left;
+    align-self: flex-start;
 }
 
 .download-log-button:hover {
-    background-color: #008ecc;
+    background-position: right;
+}
+
+.spinner {
+    border: 0.5px solid rgba(255, 255, 255, 0.8);
+    border-top: 6px solid #3498db;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }

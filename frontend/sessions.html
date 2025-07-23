@@ -31,9 +31,13 @@
       {% for session in all_sessions%}
         <div class="session-block">
           <h3>Session id: {{ session.id }}</h3>
-          <p class="session-status">Статус: {{ "Активна" if session.is_valid else "Инвалид" }}</p>
-          <p class="session-date">Дата: {{ session.date }}</p>
-          <p class="session-date">User_id: {{ session.account_id }}</p>
+          <div class="session-info">
+            <span>Статус: {{ "Активна" if session.is_valid else "Инвалид" }}</span>
+            <span>|</span>
+            <span>Дата: {{ session.date }}</span>
+            <span>|</span>
+            <span>User_id: {{ session.account_id }}</span>
+          </div>
           <div class="session-buttons">
               <form method="POST" action="/delete-session" style="display:inline;">
                   <input type="hidden" name="session_id" value="{{ session.id }}">

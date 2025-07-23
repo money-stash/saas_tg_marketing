@@ -12,10 +12,16 @@
     {% for user in all_users %}
     <div class="worker-block">
         <h3>{{ user.username }}</h3>
-        <p class="worker-type">Тип: {{ user.role }}</p>
-        <p class="worker-date">Дата: {{ user.date }}</p>
+        <div class="worker-info">
+            <span>Тип: {{ user.role }}</span>
+            <span>|</span>
+            <span>Дата: {{ user.date }}</span>
+            {% if not user.status %}
+            <span>|</span>
+            <span class="worker-status blocked">Пользователь заблокирован</span>
+            {% endif %}
+        </div>
         {% if not user.status %}
-        <p class="worker-status blocked">Пользователь заблокирован</p>
         <form action="/unblock-user" method="post">
             <input type="hidden" name="user_id" value="{{ user.id }}">
             <button type="submit" class="block-button unblock">Разблокировать</button>

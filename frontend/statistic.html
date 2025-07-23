@@ -2,11 +2,32 @@
 
 {% block styles %}
 <link rel="stylesheet" href="/static/statistic.css">
+<style>
+.statistic-block {
+    transition: opacity 0.3s ease;
+}
+.hidden-fade {
+    opacity: 0;
+    pointer-events: none;
+    position: absolute;
+}
+</style>
 {% endblock %}
 
 {% block content %}
+{% if request.args.get("success") %}
+  {% if request.args.get("success") == '1' %}
+    <div class="statistic-alert success-alert">Статистика успешно загружена</div>
+  {% elif request.args.get("success") == '0' %}
+    <div class="statistic-alert error-alert">Ошибка загрузки статистики</div>
+  {% endif %}
+  <script>
+    setTimeout(() => {
+      document.querySelector('.statistic-alert')?.remove();
+    }, 3000);
+  </script>
+{% endif %}
 <div class="statistic-page">
-
     <div class="statistic-controls">
         <div class="toggle-buttons">
             <button class="toggle-button active">Все</button>
@@ -17,23 +38,25 @@
     </div>
 
     <div class="statistic-container">
+        {% for stat in statistics %}
         <div class="statistic-block">
-            <h3>ID: 001</h3>
-            <p class="statistic-date">Дата: 2025-07-08</p>
-            <p class="statistic-type">Тип: Рассылка</p>
-            <p class="statistic-target">Тип объекта: Сессия</p>
-            <button class="download-stat-button">Скачать статистику</button>
+            <h3>ID: {{ stat.id }}</h3>
+            <div class="statistic-info">
+                <span>Дата: {{ stat.date }}</span>
+                <span>|</span>
+                <span>Тип: {{ stat.type }}</span>
+                <span>|</span>
+                <span>Тип объекта: {{ stat.target_type }}</span>
+            </div>
+            <form method="POST" action="/download-stat">
+                <input type="hidden" name="stat_id" value="{{ stat.id }}">
+                <button type="submit" class="download-stat-button">Скачать статистику</button>
+            </form>
         </div>
-        <div class="statistic-block">
-            <h3>ID: 002</h3>
-            <p class="statistic-date">Дата: 2025-07-08</p>
-            <p class="statistic-type">Тип: Парсинг</p>
-            <p class="statistic-target">Тип объекта: Задача</p>
-            <button class="download-stat-button">Скачать статистику</button>
-        </div>
+        {% endfor %}
     </div>
-
 </div>
+
 <script>
     const toggleButtons = document.querySelectorAll('.toggle-button');
     const statBlocks = document.querySelectorAll('.statistic-block');
@@ -45,13 +68,13 @@
 
             const type = button.textContent.trim();
             statBlocks.forEach(block => {
-                const label = block.querySelector('.statistic-target')?.textContent.trim();
+                const label = block.querySelector('.statistic-info')?.textContent;
                 if (type === 'Все' ||
                     (type === 'Сессии' && label?.includes('Сессия')) ||
                     (type === 'Задачи' && label?.includes('Задача'))) {
-                    block.style.display = '';
+                    block.classList.remove('hidden-fade');
                 } else {
-                    block.style.display = 'none';
+                    block.classList.add('hidden-fade');
                 }
             });
         });

@@ -4,22 +4,60 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Главная{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+
     <link rel="stylesheet" href="/static/style.css">
     {% block styles %}{% endblock %}
 </head>
 <body class="main-body">
+    <div id="loading-screen" style="position: fixed; z-index: 9999; background: #202020; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; opacity: 1; transition: opacity 0.5s ease;">
+        <div class="spinner"></div>
+    </div>
 
     <header class="main-header">
         <div class="logo" onclick="window.location.href='/'">
             <img src="/static/logo.png" alt="Logo" style="height:40px;">
         </div>
         <nav style="display:flex; gap:15px;">
-            <a href="/" class="nav-link">Главная</a>
-            <a href="/logs" class="nav-link">Логи</a>
-            <a href="/workers" class="nav-link">Воркеры</a>
-            <a href="/statistic" class="nav-link">Статистика</a>
-            <a href="/sessions" class="nav-link">Сессии</a>
-            <a href="/tokens" class="nav-link">Токены</a>
+            
+            <a href="/" class="nav-link">
+                <svg width="15" height="15" style="margin-right: 5px;" xmlns="http://www.w3.org/2000/svg">
+                    <use xlink:href="#icon-home" />
+                </svg>
+                Главная
+            </a>
+            <a href="/logs" class="nav-link">
+                <svg width="15" height="15" style="margin-right: 5px;" xmlns="http://www.w3.org/2000/svg">
+                  <use xlink:href="#icon-logs" />
+                </svg>
+                Логи
+            </a>
+            <a href="/workers" class="nav-link">
+                <svg width="15" height="15" style="margin-right: 5px;" xmlns="http://www.w3.org/2000/svg">
+                  <use xlink:href="#icon-workers" />
+                </svg>
+                Воркеры
+            </a>
+            <a href="/statistic" class="nav-link">
+                <svg width="15" height="15" style="margin-right: 5px;" xmlns="http://www.w3.org/2000/svg">
+                  <use xlink:href="#icon-statistic" />
+                </svg>
+                Статистика
+            </a>
+            <a href="/sessions" class="nav-link">
+                <svg width="15" height="15" style="margin-right: 5px;" xmlns="http://www.w3.org/2000/svg">
+                  <use xlink:href="#icon-sessions" />
+                </svg>
+                Сессии
+            </a>
+            <a href="/tokens" class="nav-link">
+                <svg width="15" height="15" style="margin-right: 5px;" xmlns="http://www.w3.org/2000/svg">
+                  <use xlink:href="#icon-tokens" />
+                </svg>
+                Токены
+            </a>
         </nav>
     </header>
 
@@ -27,5 +65,35 @@
         {% block content %}{% endblock %}
     </main>
 
+<svg style="display:none;">
+  <symbol id="icon-home" viewBox="0 0 15 15" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0.0683594 6.83355C0.0683594 6.41283 0.249846 6.01216 0.567115 5.73244L6.07891 0.872996C6.643 0.375668 7.49372 0.375668 8.05781 0.872995L13.5696 5.73244C13.8869 6.01216 14.0684 6.41283 14.0684 6.83355V13.0259C14.0684 13.84 13.4021 14.5 12.5802 14.5H1.55656C0.73465 14.5 0.0683594 13.84 0.0683594 13.0259V6.83355Z" fill="#CB3CFF"/>
+  </symbol>
+  <symbol id="icon-logs" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path fill="#CB3CFF" d="M3 4h18v2H3V4zm0 5h12v2H3V9zm0 5h18v2H3v-2zm0 5h12v2H3v-2z"/>
+  </symbol>
+  <symbol id="icon-workers" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path fill="#CB3CFF" d="M12 2a5 5 0 0 0-5 5v3H5v10h14V10h-2V7a5 5 0 0 0-5-5z"/>
+  </symbol>
+  <symbol id="icon-statistic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path fill="#CB3CFF" d="M4 22h2V10H4v12zm6 0h2V3h-2v19zm6 0h2v-7h-2v7z"/>
+  </symbol>
+  <symbol id="icon-sessions" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path fill="#CB3CFF" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4S8 5.79 8 8s1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+  </symbol>
+  <symbol id="icon-tokens" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path fill="#CB3CFF" d="M12 2L1.5 9l10.5 7 10.5-7L12 2zm0 15.75L3 10.5V17l9 6 9-6v-6.5l-9 7.25z"/>
+  </symbol>
+</svg>
+
 </body>
+<script>
+  window.addEventListener("DOMContentLoaded", () => {
+      setTimeout(() => {
+          const loader = document.getElementById("loading-screen");
+          loader.style.opacity = "0";
+          setTimeout(() => loader.style.display = "none", 500);
+      }, 500);
+  });
+</script>
 </html>

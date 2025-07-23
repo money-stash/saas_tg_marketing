@@ -1,13 +1,31 @@
 body {
-    background-color: #202020;
+    background-color: #101935;
     color: #ffffff;
+    font-family: 'Poppins', sans-serif;
+}
+
+.worker-search {
+    padding: 20px;
+    background-color: #080F25;
 }
 
 .workers-container {
     display: flex;
     flex-wrap: wrap;
-    gap: 20px;
+    gap: 15px;
     padding: 20px;
+    background-color: #080F25;
+}
+
+.search-worker-input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 0.5px solid rgba(255, 255, 255, 0.8);
+    border-radius: 4px;
+    background-color: #181f37;
+    color: white;
+    font-size: 16px;
+    box-sizing: border-box;
 }
 
 .search-worker-input::placeholder {
@@ -15,52 +33,78 @@ body {
 }
 
 .worker-block {
-    background-color: #2a2a2a;
-    border: 1px solid white;
+    background-color: #181f37;
+    border: 0.5px solid rgba(255, 255, 255, 0.8);
     padding: 15px;
     border-radius: 8px;
     color: #ffffff;
-    width: 200px;
+    min-width: 350px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
-.block-button {
-    margin-top: 10px;
-    padding: 8px 12px;
-    background-color: #00aaff;
-    color: #000;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
+.worker-block h3 {
+    margin: 0;
+    margin-bottom: 5px;
 }
 
-.block-button:hover {
-    background-color: white;
+.worker-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-size: 14px;
+    color: #cccccc;
+    flex-wrap: wrap;
 }
 
-.search-worker-input {
-    width: 100%;
-    padding: 10px 14px;
-    margin-top: 10px;
-    border: 1px solid white;
-    border-radius: 4px;
-    background-color: #282828;
-    color: white;
-    font-size: 16px;
-    box-sizing: border-box;
-}
-
-.search-worker-input::placeholder {
-    color: #00aaffaa;
+.worker-info span {
+    white-space: nowrap;
 }
 
 .worker-date,
 .worker-type {
     font-size: 14px;
-    margin-top: 5px;
     color: #cccccc;
 }
 
-
 .worker-status.blocked {
     color: red;
+    font-weight: 600;
+}
+
+.block-button {
+    padding: 8px 12px;
+    background: linear-gradient(to right, #CB3CFF, #7F25FB);
+    color: #000;
+    border: 1px solid rgba(0, 0, 0, 0.80);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-position 0.5s ease;
+    background-size: 200% 100%;
+    background-position: left;
+    align-self: flex-start;
+}
+
+.block-button:hover {
+    background-position: right;
+}
+
+.block-button.unblock {
+    background: linear-gradient(to right, #CB3CFF, #7F25FB);
+    color: #000;
+}
+
+.spinner {
+    border: 0.5px solid rgba(255, 255, 255, 0.8);
+    border-top: 6px solid #3498db;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }

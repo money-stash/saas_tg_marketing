@@ -2,6 +2,15 @@
 
 {% block styles %}
 <link rel="stylesheet" href="/static/tokens.css">
+<style>
+.token-info {
+    display: flex;
+    gap: 10px;
+    font-size: 14px;
+    color: #cccccc;
+    flex-wrap: wrap;
+}
+</style>
 {% endblock %}
 
 {% block content %}
@@ -19,9 +28,13 @@
         <form method="POST" action="/delete-token">
             <div class="token-block">
                 <h3>{{ token.key }}</h3>
-                <p class="token-date">ID: {{ token.id }}</p>
-                <p class="token-date">NAME: {{ token.name }}</p>
-                <p class="token-date">User ID: {{ token.user_id }}</p>
+                <div class="token-info">
+                    <span>ID: {{ token.id }}</span>
+                    <span>|</span>
+                    <span>NAME: {{ token.name }}</span>
+                    <span>|</span>
+                    <span>User ID: {{ token.user_id }}</span>
+                </div>
                 <input type="hidden" name="token_id" value="{{ token.id }}">
                 <button type="submit" class="delete-token-button">Удалить токен</button>
             </div>
