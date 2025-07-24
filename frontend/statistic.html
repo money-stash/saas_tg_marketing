@@ -48,10 +48,7 @@
                 <span>|</span>
                 <span>Тип объекта: {{ stat.target_type }}</span>
             </div>
-            <form method="POST" action="/download-stat">
-                <input type="hidden" name="stat_id" value="{{ stat.id }}">
-                <button type="submit" class="download-stat-button">Скачать статистику</button>
-            </form>
+            <button class="download-stat-button" data-path="{{ stat.path }}">Скачать статистику</button>
         </div>
         {% endfor %}
     </div>
@@ -69,14 +66,36 @@
             const type = button.textContent.trim();
             statBlocks.forEach(block => {
                 const label = block.querySelector('.statistic-info')?.textContent;
-                if (type === 'Все' ||
+                if (
+                    type === 'Все' ||
                     (type === 'Сессии' && label?.includes('Сессия')) ||
-                    (type === 'Задачи' && label?.includes('Задача'))) {
+                    (type === 'Задачи' && (label?.includes('parse') || label?.includes('spam')))
+                ) {
                     block.classList.remove('hidden-fade');
                 } else {
                     block.classList.add('hidden-fade');
                 }
             });
+        });
+    });
+
+    document.querySelectorAll('.download-stat-button').forEach(button => {
+        button.addEventListener('click', async () => {
+            const path = button.dataset.path;
+            const response = await fetch('/download-report', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ path })
+            });
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = path.split('/').pop();
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
         });
     });
 </script>

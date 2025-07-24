@@ -11,41 +11,44 @@
     </div>
 
     <div class="logs-container">
-        <div class="logs-block">
-            <h3>ID: 001</h3>
-            <div class="log-info">
-                <span>Статус: Актив</span>
-                <span>|</span>
-                <span>Тип: Парс</span>
-                <span>|</span>
-                <span>Дата: 10-10-2025</span>
+        {% for report in reports %}
+            <div class="logs-block">
+                <h3>ID: {{ report.id }}</h3>
+                <div class="log-info">
+                    <span>Статус: Актив</span>
+                    <span>|</span>
+                    <span>Тип: {{ report.target_type }}</span>
+                    <span>|</span>
+                    <span>Дата: {{ report.date }}</span>
+                </div>
+                <button class="download-log-button" data-path="{{ report.path }}">Скачать лог</button>
             </div>
-            <button class="download-log-button">Скачать лог</button>
-        </div>
-        
-        <div class="logs-block">
-            <h3>ID: 002</h3>
-            <div class="log-info">
-                <span>Статус: Актив</span>
-                <span>|</span>
-                <span>Тип: Рассылка</span>
-                <span>|</span>
-                <span>Дата: 10-10-2025</span>
-            </div>
-            <button class="download-log-button">Скачать лог</button>
-        </div>
-        
-        <div class="logs-block">
-            <h3>ID: 003</h3>
-            <div class="log-info">
-                <span>Статус: Актив</span>
-                <span>|</span>
-                <span>Тип: Парс</span>
-                <span>|</span>
-                <span>Дата: 10-10-2025</span>
-            </div>
-            <button class="download-log-button">Скачать лог</button>
-        </div>
+        {% endfor %}
     </div>
 </div>
+<script>
+document.querySelectorAll('.download-log-button').forEach(button => {
+    button.addEventListener('click', async () => {
+        const path = button.dataset.path;
+        const response = await fetch('/download-report', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ path })
+        });
+       
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+       
+        a.href = url;
+        a.download = path.split('/').pop();
+        document.body.appendChild(a);
+       
+        a.click();
+        a.remove();
+       
+        window.URL.revokeObjectURL(url);
+    });
+});
+</script>
 {% endblock %}
