@@ -3,6 +3,7 @@ import re
 import csv
 import json
 import random
+import aiofiles
 import asyncio
 from datetime import datetime
 from pyrogram import Client, raw
@@ -507,44 +508,147 @@ async def try_random_session_join_channel(
         return False, None
 
 
-# if __name__ == "__main__":
-#     result = asyncio.run(
-#         print_last_messages(
-#             session_path="sessions/179781882",
-#             json_path="sessions/179781882.json",
-#         )
-#     )
-#     print("Результат:", result)
+async def run_commenting_loop(sessions_dir: str = "sessions"):
+    while True:
+        try:
+            all_links = await db.get_all_channel_links()
+            all_sessions = [
+                f
+                for f in os.listdir(sessions_dir)
+                if not f.endswith(".json")
+                and os.path.isfile(os.path.join(sessions_dir, f))
+            ]
 
-#     # result = asyncio.run(
-#     #     change_username("sessions/179279285", "sessions/179279285.json", "kilohilo13")
-#     # )
-#     # # result = asyncio.run(
-#     # #     get_full_phone_number("sessions/179279285", "sessions/179279285.json")
-#     # # )
-#     # print(result)
+            for link in all_links:
+                if not link.active or link.spam_text == "False":
+                    continue
 
-#     # ok_photo = asyncio.run(
-#     #     update_profile_photo("sessions/179279285", "sessions/179279285.json")
-#     # )
-#     # print("Фото обновлено:", ok_photo)
+                if not os.path.exists(link.spam_text):
+                    print(f"Файл {link.spam_text} не найден для link_id={link.id}")
+                    continue
 
-#     # ok1 = asyncio.run(
-#     #     set_privacy_all_closed("sessions/179279285", "sessions/179279285.json")
-#     # )
-#     # print("Закрыта ли приватность:", ok1)
+                async with aiofiles.open(link.spam_text, "r", encoding="utf-8") as f:
+                    lines = await f.readlines()
+                    spam_lines = [line.strip() for line in lines if line.strip()]
+                    if not spam_lines:
+                        print(f"Файл spam_text пустой для link_id={link.id}")
+                        continue
 
-#     # ok2 = asyncio.run(
-#     #     set_privacy_all_open("sessions/179279285", "sessions/179279285.json")
-#     # )
-#     # print("Открыта ли приватность:", ok2)
+                for session_file in all_sessions:
+                    session_id = os.path.splitext(session_file)[0]
+                    session_path = os.path.join(sessions_dir, session_id)
+                    json_path = os.path.join(sessions_dir, session_id + ".json")
 
-#     # result = asyncio.run(
-#     #     download_profile_photo("sessions/179279285", "sessions/179279285.json")
-#     # )
-#     # print("Скачано:", result)
+                    if not os.path.exists(json_path):
+                        print(f"JSON-файл не найден для: {session_id}")
+                        continue
 
-#     result = asyncio.run(
-#         get_session_info("sessions/179278979", "sessions/179278979.json")
-#     )
-#     print("Скачано:", result)
+                    try:
+                        with open(json_path, "r") as f:
+                            cfg = json.load(f)
+
+                        client = Client(
+                            name=os.path.basename(session_path),
+                            workdir=os.path.dirname(session_path),
+                            api_id=cfg["app_id"],
+                            api_hash=cfg["app_hash"],
+                        )
+
+                        async with client:
+                            try:
+                                try:
+                                    await client.join_chat(link.link)
+                                except Exception as e:
+                                    print(
+                                        f"Ошибка при подписке на канал {link.link}: {e}"
+                                    )
+                                    continue
+
+                                chat = await client.get_chat(link.link)
+
+                                if chat.linked_chat:
+                                    try:
+                                        await client.join_chat(chat.linked_chat.id)
+                                        discussion_chat_id = chat.linked_chat.id
+                                    except Exception as e:
+                                        if "CHANNELS_TOO_MUCH" in str(e):
+                                            dialogs = []
+                                            async for dialog in client.get_dialogs():
+                                                dialogs.append(dialog)
+
+                                            for dialog in dialogs:
+                                                try:
+                                                    await client.leave_chat(
+                                                        dialog.chat.id
+                                                    )
+                                                    print(
+                                                        f"Покинул чат: {dialog.chat.id}"
+                                                    )
+                                                    await asyncio.sleep(
+                                                        random.uniform(1, 3)
+                                                    )
+                                                    break
+                                                except Exception as leave_e:
+                                                    print(
+                                                        f"Не удалось покинуть чат: {leave_e}"
+                                                    )
+
+                                            try:
+                                                await client.join_chat(
+                                                    chat.linked_chat.id
+                                                )
+                                                discussion_chat_id = chat.linked_chat.id
+                                            except Exception as retry_e:
+                                                print(
+                                                    f"Повторная ошибка при присоединении к группе обсуждения: {retry_e}"
+                                                )
+                                                continue
+                                        else:
+                                            print(
+                                                f"Ошибка при присоединении к группе обсуждения: {e}"
+                                            )
+                                            continue
+                                else:
+                                    print(
+                                        f"У канала {link.link} нет обсуждаемой группы"
+                                    )
+                                    continue
+
+                                async for msg in client.get_chat_history(
+                                    link.link, limit=1
+                                ):
+                                    comment = random.choice(spam_lines)
+
+                                    await client.send_message(
+                                        chat_id=discussion_chat_id,
+                                        text=comment,
+                                        reply_to_message_id=msg.id,
+                                    )
+                                    print(
+                                        f"Сессия {session_id} оставила комментарий к посту {msg.id} в группе обсуждения канала {link.link}"
+                                    )
+                                    break
+                            except Exception as e:
+                                print(
+                                    f"Ошибка при работе с каналом {link.link} через сессию {session_id}: {e}"
+                                )
+
+                        print(f"Сессия {session_id} закрыта после отправки комментария")
+
+                        session_delay = random.uniform(30, 90)
+                        print(
+                            f"Задержка {session_delay:.1f} сек перед следующей сессией..."
+                        )
+                        await asyncio.sleep(session_delay)
+
+                    except Exception as e:
+                        print(f"Ошибка запуска клиента для сессии {session_id}: {e}")
+                        await asyncio.sleep(random.uniform(10, 30))
+
+            sleep_minutes = random.randint(5, 15)
+            print(f"Цикл завершён. Сон {sleep_minutes} минут...")
+            await asyncio.sleep(sleep_minutes * 60)
+
+        except Exception as e:
+            print(f"Ошибка в основном цикле run_commenting_loop: {e}")
+            await asyncio.sleep(60)
