@@ -13,6 +13,7 @@ from models.access_tokens import AccessToken
 from models.sessions import Session
 from models.reports import Report
 from models.tasks import Task
+from models.links import ChannelLink
 
 from config import DB_PATH
 
@@ -260,6 +261,63 @@ class Database:
             await session.execute(delete(Task).where(Task.id == task_id))
             await session.commit()
             logger.info(f"Task deleted: id={task_id}")
+
+    ##########                          ##########
+    ##########    ChannelLink methods   ##########
+    ##########                          ##########
+
+    async def add_channel_link(self, link: str, spam_text: str, link_name: str = ""):
+        async with self.get_session() as session:
+            new_link = ChannelLink(link=link, spam_text=spam_text, link_name=link_name)
+            session.add(new_link)
+            await session.commit()
+            logger.info(f"Channel link added: {link}")
+
+    async def delete_channel_link_by_id(self, link_id: int):
+        async with self.get_session() as session:
+            await session.execute(delete(ChannelLink).where(ChannelLink.id == link_id))
+            await session.commit()
+            logger.info(f"Channel link deleted by ID: {link_id}")
+
+    async def delete_channel_link_by_url(self, link: str):
+        async with self.get_session() as session:
+            await session.execute(delete(ChannelLink).where(ChannelLink.link == link))
+            await session.commit()
+            logger.info(f"Channel link deleted by URL: {link}")
+
+    async def get_all_channel_links(self) -> list[ChannelLink]:
+        async with self.get_session() as session:
+            result = await session.execute(select(ChannelLink))
+            return result.scalars().all()
+
+    async def get_channel_link_by_id(self, link_id: int) -> ChannelLink | None:
+        async with self.get_session() as session:
+            result = await session.execute(
+                select(ChannelLink).where(ChannelLink.id == link_id)
+            )
+            return result.scalar_one_or_none()
+
+    async def update_channel_link_text(self, link_id: int, new_spam_text: str):
+        async with self.get_session() as session:
+            await session.execute(
+                update(ChannelLink)
+                .where(ChannelLink.id == link_id)
+                .values(spam_text=new_spam_text)
+            )
+            await session.commit()
+            logger.info(f"Channel link ID {link_id} updated with new spam_text")
+
+    async def update_channel_link_status(self, link_id: int, status: bool):
+        async with self.get_session() as session:
+            await session.execute(
+                update(ChannelLink)
+                .where(ChannelLink.id == link_id)
+                .values(active=status)
+            )
+            await session.commit()
+            logger.info(
+                f"Channel link ID {link_id} updated with new active status: {status}"
+            )
 
 
 db = Database()

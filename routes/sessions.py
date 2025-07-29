@@ -175,7 +175,7 @@ async def delete_session():
     if session_id:
         await db.delete_session(int(session_id))
 
-    return redirect(url_for("sessions.open_sessions"))
+    return jsonify({"success": True})
 
 
 @sessions_bp.route("/open-privacy", methods=["POST"])

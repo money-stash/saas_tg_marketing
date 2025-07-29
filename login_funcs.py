@@ -461,6 +461,52 @@ async def print_last_messages(
         print("Ошибка при получении сообщений:", e)
 
 
+async def try_random_session_join_channel(
+    channel_link: str, sessions_dir: str = "sessions"
+) -> tuple[bool, str | None]:
+    try:
+        print("Поиск доступных сессий...")
+        all_sessions = [
+            f
+            for f in os.listdir(sessions_dir)
+            if not f.endswith(".json") and os.path.isfile(os.path.join(sessions_dir, f))
+        ]
+
+        if not all_sessions:
+            print("Сессии не найдены.")
+            return False, None
+
+        selected = random.choice(all_sessions)
+        session_id = os.path.splitext(selected)[0]
+        print(f"Выбрана сессия: {session_id}")
+        session_path = os.path.join(sessions_dir, session_id)
+        json_path = os.path.join(sessions_dir, session_id + ".json")
+
+        if not os.path.exists(json_path):
+            print(f"JSON-файл не найден для: {selected}")
+            return False, None
+
+        with open(json_path, "r") as f:
+            config = json.load(f)
+
+        client = Client(
+            name=os.path.basename(session_path),
+            workdir=os.path.dirname(session_path),
+            api_id=config["app_id"],
+            api_hash=config["app_hash"],
+        )
+
+        print(f"Попытка подписки на канал: {channel_link}")
+        async with client:
+            chat = await client.join_chat(channel_link)
+            print(f"Успешно подписались на канал: {chat.title}")
+            return True, chat.title
+
+    except Exception as e:
+        print("Ошибка при подписке случайной сессией:", e)
+        return False, None
+
+
 # if __name__ == "__main__":
 #     result = asyncio.run(
 #         print_last_messages(

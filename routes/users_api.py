@@ -1,3 +1,5 @@
+import os
+
 from database.db import db
 
 from flask import Blueprint, jsonify, request
