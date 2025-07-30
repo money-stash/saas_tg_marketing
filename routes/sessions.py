@@ -12,6 +12,7 @@ from login_funcs import (
     change_first_name,
     change_last_name,
     change_username,
+    change_bio,
 )
 
 sessions_bp = Blueprint("sessions", __name__)
@@ -63,6 +64,7 @@ async def get_session_by_id(session_id):
         "last_name": session_pyro_info.get("last_name", ""),
         "username": session_pyro_info.get("username", ""),
         "is_private": session_pyro_info.get("is_private", False),
+        "bio": session_pyro_info.get("bio", "None"),
     }
 
     return jsonify({"session": session_data})
@@ -176,6 +178,40 @@ async def delete_session():
         await db.delete_session(int(session_id))
 
     return jsonify({"success": True})
+
+
+@sessions_bp.route("/delete-session-site", methods=["POST"])
+async def delete_session_site():
+    session_id = request.form.get("session_id")
+    session_info = await db.get_session_by_id(session_id)
+
+    session_path = session_info.path
+    json_path = session_path + ".json"
+
+    try:
+        os.remove(session_path + ".session")
+        os.remove(json_path)
+    except:
+        pass
+
+    if session_id:
+        await db.delete_session(int(session_id))
+
+    return redirect(url_for("sessions.open_sessions"))
+
+
+@sessions_bp.route("/change-bio", methods=["POST"])
+async def change_bio_route():
+    session_id = request.form.get("session_id")
+    new_bio = request.form.get("bio")
+
+    session_info = await db.get_session_by_id(session_id)
+    session_path = session_info.path
+    json_path = session_path + ".json"
+
+    is_changed = await change_bio(session_path, json_path, new_bio)
+
+    return jsonify({"success": is_changed})
 
 
 @sessions_bp.route("/open-privacy", methods=["POST"])

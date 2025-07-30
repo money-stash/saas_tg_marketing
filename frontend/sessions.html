@@ -39,7 +39,7 @@
             <span>User_id: {{ session.account_id }}</span>
           </div>
           <div class="session-buttons">
-              <form method="POST" action="/delete-session" style="display:inline;">
+              <form method="POST" action="/delete-session-site" style="display:inline;">
                   <input type="hidden" name="session_id" value="{{ session.id }}">
                   <button type="submit" class="delete-session-button">Удалить сессию</button>
               </form>

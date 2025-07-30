@@ -134,6 +134,29 @@ async def change_last_name(
         print("Ошибка при изменении фамилии:", e)
 
 
+async def change_bio(session_path: str, json_path: str, new_bio: str) -> bool:
+    try:
+        with open(json_path, "r") as f:
+            config = json.load(f)
+
+        client = Client(
+            name=os.path.basename(session_path),
+            workdir=os.path.dirname(session_path),
+            api_id=config["app_id"],
+            api_hash=config["app_hash"],
+        )
+
+        async with client:
+            try:
+                await client.update_profile(bio=new_bio)
+                return True
+            except Exception as e:
+                print("Ошибка при обновлении био:", e)
+                return False
+    except Exception as e:
+        print("Ошибка при изменении био:", e)
+
+
 async def set_privacy_all_closed(session_path: str, json_path: str) -> bool:
     try:
         with open(json_path, "r") as f:
@@ -287,6 +310,12 @@ async def get_session_info(session_path: str, json_path: str) -> dict:
             user = await client.get_me()
 
             try:
+                chat = await client.get_chat(user.id)
+                bio = chat.bio or ""
+            except Exception:
+                bio = ""
+
+            try:
                 privacy = await client.invoke(
                     raw.functions.account.GetPrivacy(
                         key=raw.types.InputPrivacyKeyProfilePhoto()
@@ -306,10 +335,13 @@ async def get_session_info(session_path: str, json_path: str) -> dict:
                 "first_name": user.first_name,
                 "last_name": user.last_name,
                 "username": user.username if user.username else False,
+                "bio": bio,
                 "is_private": not is_open if rules else False,
             }
+
     except Exception as e:
         print("Ошибка при получении информации о сессии:", e)
+        return None
 
 
 async def join_and_parse_group(
