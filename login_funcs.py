@@ -6,8 +6,21 @@ import random
 import aiofiles
 import asyncio
 from datetime import datetime
+
 from pyrogram import Client, raw
 from pyrogram.errors import SessionRevoked
+from pyrogram.raw.functions.messages import ImportChatInvite
+from pyrogram.raw.types import (
+    InputPrivacyKeyStatusTimestamp,
+    InputPrivacyKeyPhoneNumber,
+    InputPrivacyKeyProfilePhoto,
+    InputPrivacyKeyForwards,
+    InputPrivacyKeyPhoneCall,
+    InputPrivacyKeyVoiceMessages,
+    InputPrivacyKeyChatInvite,
+)
+
+from pyrogram.raw.functions.account import GetPrivacy
 
 from utils.logger import logger
 from database.db import db
@@ -157,85 +170,6 @@ async def change_bio(session_path: str, json_path: str, new_bio: str) -> bool:
         print("Ошибка при изменении био:", e)
 
 
-async def set_privacy_all_closed(session_path: str, json_path: str) -> bool:
-    try:
-        with open(json_path, "r") as f:
-            cfg = json.load(f)
-
-        client = Client(
-            name=os.path.basename(session_path),
-            workdir=os.path.dirname(session_path),
-            api_id=cfg["app_id"],
-            api_hash=cfg["app_hash"],
-        )
-
-        async with client:
-            try:
-                closelist = [raw.types.InputPrivacyValueAllowContacts()]
-                disallow = [raw.types.InputPrivacyValueDisallowAll()]
-                priv = raw.functions.account.SetPrivacy
-
-                tasks = [
-                    priv(
-                        key=raw.types.InputPrivacyKeyStatusTimestamp(), rules=closelist
-                    ),
-                    priv(key=raw.types.InputPrivacyKeyPhoneNumber(), rules=closelist),
-                    priv(key=raw.types.InputPrivacyKeyProfilePhoto(), rules=closelist),
-                    priv(key=raw.types.InputPrivacyKeyForwards(), rules=disallow),
-                    priv(key=raw.types.InputPrivacyKeyPhoneCall(), rules=closelist),
-                    priv(key=raw.types.InputPrivacyKeyAddedByPhone(), rules=closelist),
-                    priv(key=raw.types.InputPrivacyKeyChatInvite(), rules=disallow),
-                    priv(key=raw.types.InputPrivacyKeyVoiceMessages(), rules=closelist),
-                    priv(key=raw.types.InputPrivacyKeyPhoneP2P(), rules=closelist),
-                ]
-                for t in tasks:
-                    await client.invoke(t)
-                return True
-            except Exception as e:
-                print("Ошибка закрытия приватности:", e)
-                return False
-    except Exception as e:
-        print("Ошибка при изменении приватности:", e)
-
-
-async def set_privacy_all_open(session_path: str, json_path: str) -> bool:
-    try:
-        with open(json_path, "r") as f:
-            cfg = json.load(f)
-
-        client = Client(
-            name=os.path.basename(session_path),
-            workdir=os.path.dirname(session_path),
-            api_id=cfg["app_id"],
-            api_hash=cfg["app_hash"],
-        )
-
-        async with client:
-            try:
-                openlist = [raw.types.InputPrivacyValueAllowAll()]
-                priv = raw.functions.account.SetPrivacy
-
-                keys = [
-                    raw.types.InputPrivacyKeyStatusTimestamp(),
-                    raw.types.InputPrivacyKeyPhoneNumber(),
-                    raw.types.InputPrivacyKeyProfilePhoto(),
-                    raw.types.InputPrivacyKeyForwards(),
-                    raw.types.InputPrivacyKeyPhoneCall(),
-                    raw.types.InputPrivacyKeyAddedByPhone(),
-                    raw.types.InputPrivacyKeyChatInvite(),
-                    raw.types.InputPrivacyKeyVoiceMessages(),
-                    raw.types.InputPrivacyKeyPhoneP2P(),
-                ]
-                for key in keys:
-                    await client.invoke(priv(key=key, rules=openlist))
-                return True
-            except Exception as e:
-                print("Ошибка открытия приватности:", e)
-                return False
-    except Exception as e:
-        print("Ошибка при изменении приватности:", e)
-
-
 async def update_profile_photo(
     session_path: str, json_path: str, photo_path: str = "images/avatar.jpg"
 ) -> bool:
@@ -312,36 +246,44 @@ async def get_session_info(session_path: str, json_path: str) -> dict:
             try:
                 chat = await client.get_chat(user.id)
                 bio = chat.bio or ""
-            except Exception:
+            except:
                 bio = ""
 
-            try:
-                privacy = await client.invoke(
-                    raw.functions.account.GetPrivacy(
-                        key=raw.types.InputPrivacyKeyProfilePhoto()
-                    )
-                )
-
-                rules = privacy.rules
-                is_open = any(
-                    isinstance(rule, raw.types.InputPrivacyValueAllowAll)
-                    for rule in rules
-                )
-            except Exception:
-                is_open = False
-                rules = None
-
-            return {
-                "first_name": user.first_name,
-                "last_name": user.last_name,
-                "username": user.username if user.username else False,
-                "bio": bio,
-                "is_private": not is_open if rules else False,
+            keys_map = {
+                "phone_number": InputPrivacyKeyPhoneNumber(),
+                "last_seen": InputPrivacyKeyStatusTimestamp(),
+                "profile_photo": InputPrivacyKeyProfilePhoto(),
+                "message_forwards": InputPrivacyKeyForwards(),
+                "calls": InputPrivacyKeyPhoneCall(),
+                "voice_messages": InputPrivacyKeyVoiceMessages(),
+                "chat_invites": InputPrivacyKeyChatInvite(),
             }
+
+            result = {
+                "first_name": user.first_name or "",
+                "last_name": user.last_name or "",
+                "username": user.username or False,
+                "bio": bio,
+            }
+
+            for field, key in keys_map.items():
+                try:
+                    privacy_rules = await client.invoke(GetPrivacy(key=key))
+                    rules = privacy_rules.rules
+
+                    # Используем правильные типы из ответа API
+                    result[field] = any(
+                        isinstance(r, raw.types.PrivacyValueAllowAll) for r in rules
+                    )
+                except Exception as e:
+                    print(f"Ошибка при получении {field}: {e}")
+                    result[field] = False
+
+            return result
 
     except Exception as e:
         print("Ошибка при получении информации о сессии:", e)
-        return None
+        return {}
 
 
 async def join_and_parse_group(
@@ -531,12 +473,86 @@ async def try_random_session_join_channel(
 
         print(f"Попытка подписки на канал: {channel_link}")
         async with client:
-            chat = await client.join_chat(channel_link)
+            # Определяем тип ссылки и обрабатываем соответственно
+            is_invite_link = False
+            join_target = channel_link
+
+            if "t.me/+" in channel_link:
+                # Это ссылка-приглашение
+                is_invite_link = True
+                join_target = channel_link
+            elif "t.me/" in channel_link:
+                # Это обычная ссылка с username
+                join_target = channel_link.split("t.me/")[-1]
+                if join_target.startswith("@"):
+                    join_target = join_target[1:]  # Убираем @ если есть
+            else:
+                # Передан просто username (возможно с @)
+                if join_target.startswith("@"):
+                    join_target = join_target[1:]  # Убираем @ если есть
+
+            try:
+                if is_invite_link:
+                    # Для ссылок-приглашений используем join_chat с полной ссылкой
+                    chat = await client.join_chat(join_target)
+                else:
+                    # Для username используем join_chat с очищенным именем
+                    chat = await client.join_chat(join_target)
+
+            except Exception as e:
+                if "CHANNELS_TOO_MUCH" in str(e):
+                    print("Слишком много каналов, пытаемся покинуть несколько...")
+                    dialogs = []
+                    async for dialog in client.get_dialogs():
+                        dialogs.append(dialog)
+
+                    # Покидаем первые 5 каналов/чатов
+                    for dialog in dialogs[:5]:
+                        try:
+                            await client.leave_chat(dialog.chat.id)
+                            print(f"Покинул чат: {dialog.chat.title or dialog.chat.id}")
+                            await asyncio.sleep(random.uniform(1, 3))
+                        except Exception as leave_e:
+                            print(f"Не удалось покинуть чат: {leave_e}")
+
+                    # Повторная попытка подписки
+                    try:
+                        if is_invite_link:
+                            chat = await client.join_chat(join_target)
+                        else:
+                            chat = await client.join_chat(join_target)
+                    except Exception as retry_e:
+                        print(f"Ошибка повторной попытки подписки: {retry_e}")
+                        return False, None
+
+                elif "USERNAME_INVALID" in str(e):
+                    print(f"Неверный username или недоступная ссылка: {join_target}")
+                    return False, None
+                elif "INVITE_HASH_EXPIRED" in str(e):
+                    print("Ссылка-приглашение истекла")
+                    return False, None
+                elif "USER_ALREADY_PARTICIPANT" in str(e):
+                    print("Пользователь уже участник канала")
+                    # Получаем информацию о канале для возврата названия
+                    try:
+                        if is_invite_link:
+                            # Для invite links нужно как-то получить информацию о канале
+                            # Попробуем через get_chat, но это может не сработать
+                            return True, "Канал (уже участник)"
+                        else:
+                            chat = await client.get_chat(join_target)
+                            return True, chat.title or chat.first_name or str(chat.id)
+                    except:
+                        return True, "Канал (уже участник)"
+                else:
+                    print(f"Ошибка при подписке случайной сессией: {e}")
+                    return False, None
+
             print(f"Успешно подписались на канал: {chat.title}")
             return True, chat.title
 
     except Exception as e:
-        print("Ошибка при подписке случайной сессией:", e)
+        print(f"Общая ошибка при подписке случайной сессией: {e}")
         return False, None
 
 
@@ -588,15 +604,119 @@ async def run_commenting_loop(sessions_dir: str = "sessions"):
 
                         async with client:
                             try:
-                                try:
-                                    await client.join_chat(link.link)
-                                except Exception as e:
-                                    print(
-                                        f"Ошибка при подписке на канал {link.link}: {e}"
-                                    )
-                                    continue
+                                is_invite = "/+" in link.link or "t.me/+" in link.link
+                                print(f"Попытка подписки на канал: {link.link}")
 
-                                chat = await client.get_chat(link.link)
+                                if is_invite:
+                                    invite_hash = link.link.split("+")[-1]
+                                    try:
+                                        await client.invoke(
+                                            ImportChatInvite(hash=invite_hash)
+                                        )
+                                        print(
+                                            f"Успешно попписались на канал: {link.link}"
+                                        )
+                                    except Exception as e:
+                                        if "USER_ALREADY_PARTICIPANT" in str(e):
+                                            print(
+                                                f"Уже подписаны на канал: {link.link}"
+                                            )
+                                        elif "CHANNELS_TOO_MUCH" in str(e):
+                                            print(
+                                                "Слишком много каналов, пытаемся покинуть несколько.."
+                                            )
+                                            dialogs = [
+                                                d async for d in client.get_dialogs()
+                                            ]
+                                            to_leave = dialogs[: random.randint(3, 5)]
+                                            for d in to_leave:
+                                                try:
+                                                    title = getattr(
+                                                        d.chat, "title", "unknown"
+                                                    )
+                                                    await client.leave_chat(d.chat.id)
+                                                    print(f"Покинул чат: {title}")
+                                                    await asyncio.sleep(
+                                                        random.uniform(1, 2)
+                                                    )
+                                                except Exception as leave_e:
+                                                    print(
+                                                        f"Не удалось покинуть чат: {leave_e}"
+                                                    )
+                                            try:
+                                                await client.invoke(
+                                                    ImportChatInvite(hash=invite_hash)
+                                                )
+                                                print(
+                                                    f"Успешно попписались на канал: {link.link}"
+                                                )
+                                            except Exception as retry_e:
+                                                if "USER_ALREADY_PARTICIPANT" in str(
+                                                    retry_e
+                                                ):
+                                                    print(
+                                                        f"Уже подписаны на канал: {link.link}"
+                                                    )
+                                                else:
+                                                    print(
+                                                        f"Повторная ошибка при подписке на канал {link.link}: {retry_e}"
+                                                    )
+                                                    continue
+                                        else:
+                                            print(
+                                                f"Ошибка при подписке на канал {link.link}: {e}"
+                                            )
+                                            continue
+                                    chat = await client.get_chat(link.link)
+                                else:
+                                    try:
+                                        await client.join_chat(link.link)
+                                        print(
+                                            f"Успешно попписались на канал: {link.link}"
+                                        )
+                                    except Exception as e:
+                                        if "CHANNELS_TOO_MUCH" in str(e):
+                                            print(
+                                                "Слишком много каналов, пытаемся покинуть несколько.."
+                                            )
+                                            dialogs = [
+                                                d async for d in client.get_dialogs()
+                                            ]
+                                            to_leave = dialogs[: random.randint(3, 5)]
+                                            for d in to_leave:
+                                                try:
+                                                    title = getattr(
+                                                        d.chat, "title", "unknown"
+                                                    )
+                                                    await client.leave_chat(d.chat.id)
+                                                    print(f"Покинул чат: {title}")
+                                                    await asyncio.sleep(
+                                                        random.uniform(1, 2)
+                                                    )
+                                                except Exception as leave_e:
+                                                    print(
+                                                        f"Не удалось покинуть чат: {leave_e}"
+                                                    )
+                                            try:
+                                                await client.join_chat(link.link)
+                                                print(
+                                                    f"Успешно попписались на канал: {link.link}"
+                                                )
+                                            except Exception as retry_e:
+                                                print(
+                                                    f"Повторная ошибка при подписке на канал {link.link}: {retry_e}"
+                                                )
+                                                continue
+                                        elif "USER_ALREADY_PARTICIPANT" in str(e):
+                                            print(
+                                                f"Уже подписаны на канал: {link.link}"
+                                            )
+                                        else:
+                                            print(
+                                                f"Ошибка при подписке на канал {link.link}: {e}"
+                                            )
+                                            continue
+                                    chat = await client.get_chat(link.link)
 
                                 if chat.linked_chat:
                                     try:
@@ -604,27 +724,24 @@ async def run_commenting_loop(sessions_dir: str = "sessions"):
                                         discussion_chat_id = chat.linked_chat.id
                                     except Exception as e:
                                         if "CHANNELS_TOO_MUCH" in str(e):
-                                            dialogs = []
-                                            async for dialog in client.get_dialogs():
-                                                dialogs.append(dialog)
-
-                                            for dialog in dialogs:
+                                            dialogs = [
+                                                d async for d in client.get_dialogs()
+                                            ]
+                                            to_leave = dialogs[: random.randint(3, 5)]
+                                            for d in to_leave:
                                                 try:
-                                                    await client.leave_chat(
-                                                        dialog.chat.id
+                                                    title = getattr(
+                                                        d.chat, "title", "unknown"
                                                     )
-                                                    print(
-                                                        f"Покинул чат: {dialog.chat.id}"
-                                                    )
+                                                    await client.leave_chat(d.chat.id)
+                                                    print(f"Покинул чат: {title}")
                                                     await asyncio.sleep(
-                                                        random.uniform(1, 3)
+                                                        random.uniform(1, 2)
                                                     )
-                                                    break
                                                 except Exception as leave_e:
                                                     print(
                                                         f"Не удалось покинуть чат: {leave_e}"
                                                     )
-
                                             try:
                                                 await client.join_chat(
                                                     chat.linked_chat.id
@@ -647,10 +764,9 @@ async def run_commenting_loop(sessions_dir: str = "sessions"):
                                     continue
 
                                 async for msg in client.get_chat_history(
-                                    link.link, limit=1
+                                    chat.id, limit=1
                                 ):
                                     comment = random.choice(spam_lines)
-
                                     await client.send_message(
                                         chat_id=discussion_chat_id,
                                         text=comment,
@@ -660,6 +776,7 @@ async def run_commenting_loop(sessions_dir: str = "sessions"):
                                         f"Сессия {session_id} оставила комментарий к посту {msg.id} в группе обсуждения канала {link.link}"
                                     )
                                     break
+
                             except Exception as e:
                                 print(
                                     f"Ошибка при работе с каналом {link.link} через сессию {session_id}: {e}"
@@ -684,3 +801,149 @@ async def run_commenting_loop(sessions_dir: str = "sessions"):
         except Exception as e:
             print(f"Ошибка в основном цикле run_commenting_loop: {e}")
             await asyncio.sleep(60)
+
+
+async def hide_profile_photo(session_path: str, json_path: str) -> bool:
+    try:
+        with open(json_path, "r") as f:
+            cfg = json.load(f)
+
+        client = Client(
+            name=os.path.basename(session_path),
+            workdir=os.path.dirname(session_path),
+            api_id=cfg["app_id"],
+            api_hash=cfg["app_hash"],
+        )
+
+        async with client:
+            await client.invoke(
+                raw.functions.account.SetPrivacy(
+                    key=raw.types.InputPrivacyKeyProfilePhoto(),
+                    rules=[raw.types.InputPrivacyValueDisallowAll()],
+                )
+            )
+            return True
+    except Exception as e:
+        print("Ошибка при скрытии аватарки:", e)
+        return False
+
+
+async def open_profile_photo(session_path: str, json_path: str) -> bool:
+    try:
+        with open(json_path, "r") as f:
+            cfg = json.load(f)
+
+        client = Client(
+            name=os.path.basename(session_path),
+            workdir=os.path.dirname(session_path),
+            api_id=cfg["app_id"],
+            api_hash=cfg["app_hash"],
+        )
+
+        async with client:
+            await client.invoke(
+                raw.functions.account.SetPrivacy(
+                    key=raw.types.InputPrivacyKeyProfilePhoto(),
+                    rules=[raw.types.InputPrivacyValueAllowAll()],
+                )
+            )
+            return True
+    except Exception as e:
+        print("Ошибка при открытии доступа к аватарке:", e)
+        return False
+
+
+async def set_privacy_closed(
+    session_path: str, json_path: str, privacy_key_name: str
+) -> bool:
+    privacy_keys = {
+        "phone_number": raw.types.InputPrivacyKeyPhoneNumber,
+        "last_seen": raw.types.InputPrivacyKeyStatusTimestamp,
+        "profile_photo": raw.types.InputPrivacyKeyProfilePhoto,
+        "message_forwards": raw.types.InputPrivacyKeyForwards,
+        "calls": raw.types.InputPrivacyKeyPhoneCall,
+        "voice_messages": raw.types.InputPrivacyKeyVoiceMessages,
+        "messages": raw.types.InputPrivacyKeyPhoneP2P,
+        "chat_invites": raw.types.InputPrivacyKeyChatInvite,
+    }
+
+    if privacy_key_name not in privacy_keys:
+        print(f"Недопустимый ключ конфиденциальности: {privacy_key_name}")
+        return False
+
+    try:
+        with open(json_path, "r") as f:
+            config = json.load(f)
+
+        client = Client(
+            name=os.path.basename(session_path),
+            workdir=os.path.dirname(session_path),
+            api_id=config["app_id"],
+            api_hash=config["app_hash"],
+        )
+
+        async with client:
+            key_instance = privacy_keys[privacy_key_name]()
+            await client.invoke(
+                raw.functions.account.SetPrivacy(
+                    key=key_instance,
+                    rules=[raw.types.InputPrivacyValueDisallowAll()],
+                )
+            )
+            return True
+    except Exception as e:
+        print(f"Ошибка при закрытии параметра {privacy_key_name}:", e)
+        return False
+
+
+async def set_privacy_opened(
+    session_path: str, json_path: str, privacy_key_name: str
+) -> bool:
+    privacy_keys = {
+        "phone_number": raw.types.InputPrivacyKeyPhoneNumber,
+        "last_seen": raw.types.InputPrivacyKeyStatusTimestamp,
+        "profile_photo": raw.types.InputPrivacyKeyProfilePhoto,
+        "message_forwards": raw.types.InputPrivacyKeyForwards,
+        "calls": raw.types.InputPrivacyKeyPhoneCall,
+        "voice_messages": raw.types.InputPrivacyKeyVoiceMessages,
+        "messages": raw.types.InputPrivacyKeyPhoneP2P,
+        "chat_invites": raw.types.InputPrivacyKeyChatInvite,
+    }
+
+    if privacy_key_name not in privacy_keys:
+        print(f"Недопустимый ключ конфиденциальности: {privacy_key_name}")
+        return False
+
+    try:
+        with open(json_path, "r") as f:
+            config = json.load(f)
+
+        client = Client(
+            name=os.path.basename(session_path),
+            workdir=os.path.dirname(session_path),
+            api_id=config["app_id"],
+            api_hash=config["app_hash"],
+        )
+
+        async with client:
+            key_instance = privacy_keys[privacy_key_name]()
+            await client.invoke(
+                raw.functions.account.SetPrivacy(
+                    key=key_instance,
+                    rules=[raw.types.InputPrivacyValueAllowAll()],
+                )
+            )
+            return True
+    except Exception as e:
+        print(f"Ошибка при открытии параметра {privacy_key_name}:", e)
+        return False
+
+
+async def main():
+    await hide_profile_photo(
+        session_path="sessions/130256930", json_path="sessions/130256930.json"
+    )
+
+
+# if __name__ == "__main__":
+#     asyncio.run(main())

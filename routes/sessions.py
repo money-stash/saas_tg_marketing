@@ -7,7 +7,8 @@ from config import UPLOAD_FOLDER
 from pyro_funcs.checker import check_session_with_config
 from login_funcs import (
     get_session_info,
-    set_privacy_all_open,
+    set_privacy_closed,
+    set_privacy_opened,
     update_profile_photo,
     change_first_name,
     change_last_name,
@@ -47,13 +48,22 @@ async def get_all_sessions():
 async def get_session_by_id(session_id):
     session_info = await db.get_session_by_id(int(session_id))
 
+    if not session_info:
+        return jsonify({"error": "Session not found"}), 404
+
     session_path = session_info.path
     json_path = session_path + ".json"
 
     session_pyro_info = await get_session_info(session_path, json_path)
 
-    if not session_info:
-        return jsonify({"error": "Session not found"}), 404
+    if session_pyro_info is False:
+        try:
+            os.remove(session_path + ".session")
+            os.remove(json_path)
+        except:
+            pass
+        await db.delete_session(session_info.id)
+        return jsonify({"session": "error"}), 410
 
     session_data = {
         "id": session_info.id,
@@ -63,8 +73,14 @@ async def get_session_by_id(session_id):
         "first_name": session_pyro_info.get("first_name", ""),
         "last_name": session_pyro_info.get("last_name", ""),
         "username": session_pyro_info.get("username", ""),
-        "is_private": session_pyro_info.get("is_private", False),
         "bio": session_pyro_info.get("bio", "None"),
+        "chat_invites": session_pyro_info.get("chat_invites", "Zapros"),
+        "phone_number": session_pyro_info.get("phone_number", "Zapros"),
+        "last_seen": session_pyro_info.get("last_seen", "Zapros"),
+        "profile_photo": session_pyro_info.get("profile_photo", "Zapros"),
+        "message_forwards": session_pyro_info.get("message_forwards", "Zapros"),
+        "calls": session_pyro_info.get("calls", "Zapros"),
+        "voice_messages": session_pyro_info.get("voice_messages", "Zapros"),
     }
 
     return jsonify({"session": session_data})
@@ -214,15 +230,30 @@ async def change_bio_route():
     return jsonify({"success": is_changed})
 
 
-@sessions_bp.route("/open-privacy", methods=["POST"])
-async def open_privacy():
+@sessions_bp.route("/open-privacy-bot", methods=["POST"])
+async def open_privacy_route():
     session_id = request.form.get("session_id")
+    privacy_key_name = request.form.get("privacy_key_name")
 
     session_info = await db.get_session_by_id(session_id)
     session_path = session_info.path
     json_path = session_path + ".json"
 
-    is_changed = await set_privacy_all_open(session_path, json_path)
+    is_changed = await set_privacy_opened(session_path, json_path, privacy_key_name)
+
+    return jsonify({"success": is_changed})
+
+
+@sessions_bp.route("/close-privacy", methods=["POST"])
+async def close_privacy():
+    session_id = request.form.get("session_id")
+    privacy_key_name = request.form.get("privacy_key_name")
+
+    session_info = await db.get_session_by_id(session_id)
+    session_path = session_info.path
+    json_path = session_path + ".json"
+
+    is_changed = await set_privacy_closed(session_path, json_path, privacy_key_name)
 
     return jsonify({"success": is_changed})
 

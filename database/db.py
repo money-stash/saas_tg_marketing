@@ -93,6 +93,14 @@ class Database:
             await session.commit()
             logger.info(f"Worker {id} blocked")
 
+    async def block_user_by_username(self, username: str):
+        async with self.get_session() as session:
+            await session.execute(
+                update(Worker).where(Worker.username == username).values(status=False)
+            )
+            await session.commit()
+            logger.info(f"Worker with username '{username}' blocked")
+
     async def unblock_user(self, id: int):
         async with self.get_session() as session:
             await session.execute(
@@ -112,6 +120,7 @@ class Database:
             session.add(token)
             await session.commit()
             logger.info(f"Token created: {key} (name: {name})")
+            return key
 
     async def get_all_tokens(self) -> list[AccessToken]:
         async with self.get_session() as session:

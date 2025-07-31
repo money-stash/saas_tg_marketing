@@ -9,8 +9,6 @@ from login_funcs import (
     change_username,
     change_first_name,
     change_last_name,
-    set_privacy_all_closed,
-    set_privacy_all_open,
 )
 
 session_info_bp = Blueprint("session_info", __name__)
@@ -72,13 +70,6 @@ async def update_field(session_id, field):
         elif field == "username":
             await change_username(session_path, json_path, value)
             info["username"] = value
-        elif field == "is_private":
-            if value.lower() == "true":
-                await set_privacy_all_closed(session_path, json_path)
-                info["is_private"] = True
-            else:
-                await set_privacy_all_open(session_path, json_path)
-                info["is_private"] = False
 
         return render_template(
             "session_info.html",

@@ -18,7 +18,7 @@ async def get_users():
                 "id": user.id,
                 "username": user.username,
                 "status": user.status,
-                "role": user.status,
+                "role": user.role,
                 "key_id": user.key_id,
                 "user_id": user.user_id,
             }
