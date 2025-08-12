@@ -20,6 +20,7 @@ from pyrogram.raw.types import (
     InputPrivacyKeyChatInvite,
 )
 
+from pyrogram.errors import ChatWriteForbidden, UserNotParticipant, FloodWait
 from pyrogram.raw.functions.account import GetPrivacy
 
 from utils.logger import logger
@@ -712,70 +713,90 @@ async def run_commenting_loop(sessions_dir: str = "sessions"):
                                                 f"Уже подписаны на канал: {link.link}"
                                             )
                                         else:
-                                            print(
-                                                f"Ошибка при подписке на канал {link.link}: {e}"
-                                            )
+                                            print(f"Ошибка при подписке на канал: {e}")
                                             continue
                                     chat = await client.get_chat(link.link)
 
-                                if chat.linked_chat:
-                                    try:
-                                        await client.join_chat(chat.linked_chat.id)
-                                        discussion_chat_id = chat.linked_chat.id
-                                    except Exception as e:
-                                        if "CHANNELS_TOO_MUCH" in str(e):
-                                            dialogs = [
-                                                d async for d in client.get_dialogs()
-                                            ]
-                                            to_leave = dialogs[: random.randint(3, 5)]
-                                            for d in to_leave:
-                                                try:
-                                                    title = getattr(
-                                                        d.chat, "title", "unknown"
-                                                    )
-                                                    await client.leave_chat(d.chat.id)
-                                                    print(f"Покинул чат: {title}")
-                                                    await asyncio.sleep(
-                                                        random.uniform(1, 2)
-                                                    )
-                                                except Exception as leave_e:
-                                                    print(
-                                                        f"Не удалось покинуть чат: {leave_e}"
-                                                    )
-                                            try:
-                                                await client.join_chat(
-                                                    chat.linked_chat.id
-                                                )
-                                                discussion_chat_id = chat.linked_chat.id
-                                            except Exception as retry_e:
-                                                print(
-                                                    f"Повторная ошибка при присоединении к группе обсуждения: {retry_e}"
-                                                )
-                                                continue
-                                        else:
-                                            print(
-                                                f"Ошибка при присоединении к группе обсуждения: {e}"
-                                            )
-                                            continue
-                                else:
+                                if not chat.linked_chat:
                                     print(
                                         f"У канала {link.link} нет обсуждаемой группы"
                                     )
                                     continue
 
-                                async for msg in client.get_chat_history(
-                                    chat.id, limit=1
-                                ):
-                                    comment = random.choice(spam_lines)
-                                    await client.send_message(
-                                        chat_id=discussion_chat_id,
-                                        text=comment,
-                                        reply_to_message_id=msg.id,
-                                    )
+                                try:
+                                    history = [
+                                        m
+                                        async for m in client.get_chat_history(
+                                            chat.id, limit=1
+                                        )
+                                    ]
+                                    if not history:
+                                        print(f"В канале {link.link} нет постов")
+                                        continue
+                                    last_post = history[0]
+                                except Exception as e:
                                     print(
-                                        f"Сессия {session_id} оставила комментарий к посту {msg.id} в группе обсуждения канала {link.link}"
+                                        f"Не удалось получить последний пост канала {link.link}: {e}"
                                     )
-                                    break
+                                    continue
+
+                                try:
+                                    discussion_msg = (
+                                        await client.get_discussion_message(
+                                            chat.id, last_post.id
+                                        )
+                                    )
+                                except Exception as e:
+                                    print(
+                                        f"Не удалось получить тред для поста {last_post.id} канала {link.link}: {e}"
+                                    )
+                                    continue
+
+                                comment = random.choice(spam_lines)
+
+                                try:
+                                    await discussion_msg.reply(comment)
+                                    print(
+                                        f"Сессия {session_id} оставила комментарий к последнему посту {last_post.id} в канале {link.link}"
+                                    )
+                                except (ChatWriteForbidden, UserNotParticipant) as e:
+                                    try:
+                                        await client.join_chat(discussion_msg.chat.id)
+                                        await asyncio.sleep(random.uniform(1.5, 3.0))
+                                        await discussion_msg.reply(comment)
+                                        print(
+                                            f"Сессия {session_id} оставила комментарий после подписки на обсуждаемую группу {discussion_msg.chat.id}"
+                                        )
+                                    except Exception as e2:
+                                        print(
+                                            f"Не удалось оставить комментарий после подписки: {e2}"
+                                        )
+                                except FloodWait as fw:
+                                    print(
+                                        f"FloodWait {fw.value}s на сессии {session_id}"
+                                    )
+                                    await asyncio.sleep(fw.value + 1)
+                                except Exception as e:
+                                    if "USER_NOT_PARTICIPANT" in str(
+                                        e
+                                    ) or "CHAT_WRITE_FORBIDDEN" in str(e):
+                                        try:
+                                            await client.join_chat(
+                                                discussion_msg.chat.id
+                                            )
+                                            await asyncio.sleep(
+                                                random.uniform(1.5, 3.0)
+                                            )
+                                            await discussion_msg.reply(comment)
+                                            print(
+                                                f"Сессия {session_id} оставила комментарий после подписки на обсуждаемую группу {discussion_msg.chat.id}"
+                                            )
+                                        except Exception as e2:
+                                            print(
+                                                f"Не удалось оставить комментарий после подписки: {e2}"
+                                            )
+                                    else:
+                                        print(f"Ошибка при отправке комментария: {e}")
 
                             except Exception as e:
                                 print(
