@@ -125,3 +125,20 @@ async def update_status():
         return jsonify({"success": True})
 
     return jsonify({"success": True})
+
+
+@links_bp.route("/delete-link-api", methods=["POST"])
+async def delete_link_api():
+    link_id = request.form.get("link_id", type=int)
+    link_info = await db.get_channel_link_by_id(link_id)
+
+    if not link_info:
+        return jsonify({"error": "Link not found"}), 404
+
+    await db.delete_channel_link_by_id(link_id)
+    try:
+        os.remove(link_info.spam_text)
+    except Exception as e:
+        print(f"Error removing file: {e}")
+
+    return jsonify({"success": True})

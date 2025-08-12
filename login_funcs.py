@@ -87,6 +87,9 @@ async def change_username(session_path: str, json_path: str, new_username: str) 
             api_hash=config["app_hash"],
         )
 
+        if new_username.strip().lower() == "none":
+            new_username = None
+
         async with client:
             try:
                 result = await client.set_username(new_username)
@@ -94,8 +97,9 @@ async def change_username(session_path: str, json_path: str, new_username: str) 
             except Exception as e:
                 print("Ошибка при смене username:", e)
                 return False
-    except:
-        pass
+    except Exception as e:
+        print("Ошибка при открытии или обработке файла:", e)
+        return False
 
 
 async def change_first_name(
